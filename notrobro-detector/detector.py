@@ -15,7 +15,7 @@ def get_hash_from_dir(path):
 	images = os.listdir(path)
 	images.sort()
 	hashlist = []
-	for i,img in enumerate(images):
+	for img in images:
 		hashlist.append(get_hash(os.path.join(path, img)))
 	return hashlist, images
 
@@ -46,7 +46,6 @@ def get_duration(out):
 	while out[current]!=",":
 		duration+=out[current]
 		current+=1
-	# to_sec = 0.0
 	total = duration.split(":")
 	to_sec = float(total[0])*3600.0 + float(total[1])*60.0 + float(total[1])
 	return to_sec
@@ -56,8 +55,7 @@ def get_scene_transitions(path, threshold, category):
 	end_time = 360 #in seconds (can be put in arguments as well)
 	outro_end_time = -300 #in seconds from end of video (can be put in arguments as well)
 
-	name, ext = os.path.splitext(path)
-	# print (name)
+	name, _ = os.path.splitext(path)
 
 	if os.path.exists(name):
 		shutil.rmtree(name)
@@ -68,10 +66,7 @@ def get_scene_transitions(path, threshold, category):
 	if category is "intro":
 		scenes = "ffmpeg -i " + '"' + input_file + '"' + " -ss 0 -to " + str(end_time) + ' -vf  "select=' + "'gt(scene," + str(th) + ")'," + 'showinfo" -vsync vfr "' + name + '/' + '"%04d.jpg>scenes 2>&1'
 	elif category is "outro":
-		# print(end_time)
 		scenes = "ffmpeg -sseof " + str(outro_end_time) + " -i " + '"' + input_file + '"' + ' -vf  "select=' + "'gt(scene," + str(th) + ")'," + 'showinfo" -vsync vfr "' + name + '/' + '"%04d.jpg>scenes 2>&1'
-		# scenes = "ffmpeg -i " + '"' + input_file + '"' + " -ss " + str(end_time) + " -to " + str(total_time) + ' -vf  "select=' + "'gt(scene," + str(th) + ")'," + 'showinfo" -vsync vfr "' + name + '/' + '"%04d.jpg>scenes 2>&1'
-		# print(scenes)
 
 	subprocess.call(scenes, shell = True)
 
@@ -97,8 +92,8 @@ def get_hash_video(path, threshold, category):
 		begin = total_time + outro_end_time
 		for i in range(len(scene_transitions)):
 			scene_transitions[i] = str(float(scene_transitions[i]) + begin)
-	name, ext = os.path.splitext(path)
-	hashlist, images = get_hash_from_dir(name)
+	name, _ = os.path.splitext(path)
+	hashlist, _ = get_hash_from_dir(name)
 	if os.path.exists(name):
 		shutil.rmtree(name)
 	return hashlist, scene_transitions
@@ -110,8 +105,6 @@ def get_hash_video(path, threshold, category):
 def common_elements(list1, list2):
 	common = []
 	for i, element in enumerate(list1):
-		# if element in list2:
-			# common.append(element)
 		try:
 			ind = list2.index(element)
 			common.append((i, ind))
@@ -123,8 +116,6 @@ def common_elements(list1, list2):
 def common_elements_outro(list1, list2):
 	common = []
 	for i, element1 in enumerate(list1):
-		# if element in list2:
-			# common.append(element)
 		for j, element2 in enumerate(list2):
 			if (element1-element2)<=5:
 				if len(common)!=0 and common[-1][1]<j:
@@ -147,7 +138,6 @@ def longest_common_subarray(l1, l2):
 			cur_array = []
 			cur_indices = []
 			while ((i+temp < len1) and (j+temp < len2) and (l1[i+temp]-l2[j+temp])<=30): #hamming distance
-			# while ((i+temp < len1) and (j+temp < len2) and l1[i+temp] == l2[j+temp]):
 				cur_array.append(l2[j+temp])
 				cur_indices.append((i+temp, j+temp))
 				temp+=1
@@ -162,7 +152,7 @@ def gen_timings_processed(videos_process, threshold, method):
 	intro_times = []
 	outro_times = []
 
-	#Processing for Iintros
+	#Processing for Intros
 	hash_prev, scene_prev = get_hash_video(videos_process[0], threshold, "intro")
 	
 	print(0, "Intro")
@@ -211,7 +201,6 @@ def gen_timings_processed(videos_process, threshold, method):
 	for i in range(1, len(videos_process)):
 		hash_cur, scene_cur = get_hash_video(videos_process[i], threshold, "outro")
 		indices = common_elements_outro(hash_prev, hash_cur)
-		# print(indices)			
 		outro_start_prev = scene_prev[indices[0][0]]
 		outro_start_cur = scene_cur[indices[0][1]]
 		
@@ -243,7 +232,7 @@ def gen_timings_processed(videos_process, threshold, method):
 
 def create_edl(videos, intro_timings, outro_timings):
 	for i,file in enumerate(videos):
-		filename, file_extension = os.path.splitext(file)
+		filename, _ = os.path.splitext(file)
 		suffix = '.edl'
 		edl_file = filename + suffix
 		f = open(edl_file, "w")
@@ -259,7 +248,6 @@ def generate(path, threshold, method, force):
 	videos = []
 	for ext in ('*.mp4', '*.mkv', '*.avi', '*.mov', '*.wmv'):	#video formats - extendable
 		videos.extend(glob.glob(os.path.join(path, ext)))
-	# print(videos)
 
 	#if there is only 1 video in the directory
 	if len(videos)==1:
@@ -270,13 +258,12 @@ def generate(path, threshold, method, force):
 	videos_process = []
 	if force is False:
 		for file in videos:
-			filename, file_extension = os.path.splitext(file)
+			filename, _ = os.path.splitext(file)
 			suffix = '.edl'
 			if (filename + suffix) not in all_files:
 				videos_process.append(file)
 	else:
 		videos_process = copy.deepcopy(videos)
-	# print(videos_process)
 
 	if len(videos_process)==0:
 		print("No videos to process.")
@@ -320,11 +307,6 @@ def main():
 	if args.method!="all_match" and args.method!="longest_common":
 		print("Enter correct method: (1) all_match (2) longest_common")
 		exit()
-
-	# print(args.path)
-	# print(args.threshold)
-	# print(args.method)
-	# print(args.force)
 
 	generate(args.path, args.threshold, args.method, args.force)
 
