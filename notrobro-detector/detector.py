@@ -19,7 +19,7 @@ def get_hash_from_dir(path):
 		hashlist.append(get_hash(os.path.join(path, img)))
 	return hashlist, images
 
-def get_timings(out):
+def get_timings(out, category):
 	to_find = "pts_time:"
 	length = len(to_find)
 	loc = -1
@@ -34,7 +34,8 @@ def get_timings(out):
 			time+=out[current]
 			current+=1
 		times.append(time)
-	del times[-1]
+	if category is "intro":
+		del times[-1]
 	return times
 
 def get_duration(out):
@@ -78,7 +79,7 @@ def get_scene_transitions(path, threshold, category):
 	file = open("scenes", "r")
 	out = file.read()
 	file.close()
-	times = get_timings(out)
+	times = get_timings(out, category)
 	os.remove("./scenes")
 
 	return times
