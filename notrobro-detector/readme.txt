@@ -1,3 +1,7 @@
+Prerequisites:
+ffmpeg need to be installed beforehand globally and should be able to run via the command line interface. 
+
+
 Arguments:
   -h, --help            (show this help message and exit)
   --path PATH, -p PATH  (TV show directory path) (mandatory argument)
@@ -25,4 +29,4 @@ Change Method:
 
 
 (Tested on Ubuntu 16.04)
-(Testing for Windows required)
+(Tested for Windows)
