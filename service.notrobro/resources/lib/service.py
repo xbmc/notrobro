@@ -12,8 +12,11 @@ DIALOG = xbmcgui.Dialog()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
 
 class NotrobroPlayer(xbmc.Player):
+
+    playing = False
     
     def __init__(self, *args, **kwargs):
+        self.file = None
         self.intro_start_time = None
         self.intro_end_time = None
         self.outro_start_time = None
@@ -24,13 +27,39 @@ class NotrobroPlayer(xbmc.Player):
         logger.debug("Player got a stream (audio or video)")
 
     def onAVStarted(self):
-        logger.debug("Kodi actually started playing a media item/displaying frames")
-    
+        if self.isPlayingVideo() and not self.playing:
+            logger.debug("Kodi actually started playing a media item/displaying frames")
+            self.playing = True
+            self.file = self.getPlayingFile()            
+            name, _ = os.path.splitext(self.file)
+            try:
+                with open(name + ".txt", "r") as f:
+                    times = f.read()
+            except Exception as ex:
+                logger.debug(ex)
+            intro = times.split("\n")[0].split()
+            if intro[0] is not "None":
+                self.intro_start_time = float(intro[0])
+            if intro[1] is not "None":
+                self.intro_end_time = float(intro[1])
+            outro = times.split("\n")[1].split()
+            if outro[0] is not "None":
+                self.outro_start_time = float(outro[0])
+            if outro[1] is not "None":
+                self.outro_end_time = float(outro[1])
+
     def onPlayBackEnded(self):
         logger.debug("Playback has ended")
 
     def onPlayBackStopped(self):
-        logger.debug("Playback has been stopped")
+        if not self.isPlayingVideo() and self.playing:
+            logger.debug("Playback has been stopped")
+            self.playing = False
+            self.file = None
+            self.intro_start_time = None
+            self.intro_end_time = None
+            self.outro_start_time = None
+            self.outro_end_time = None
     
     def onPlayBackPaused(self):
         logger.debug("Playback has been paused")
@@ -41,23 +70,6 @@ class NotrobroPlayer(xbmc.Player):
     def onPlayBackSeek(self, time, offset):
         logger.debug("User seeked to the given time")
 
-    def setTime(self, category, position, t_sec):
-        if category is "intro":
-            if position is 0:
-                self.intro_start_time = t_sec
-            if position is 1:
-                self.intro_end_time = t_sec
-        elif category is "outro":
-            if position is 0:
-                self.outro_start_time = t_sec
-            if position is 1:
-                self.outro_end_time = t_sec
-
-    def getAll(self):
-        output = " Notrobro Intro: Start Time- " + str(self.intro_start_time) + " End Time- " + str(self.intro_end_time) + " Outro: Start Time- " + str(self.outro_start_time) + " End Time- " + str(self.outro_end_time)
-        return output
-
-    
 
 class NotbroMonitor(xbmc.Monitor):
 
@@ -87,42 +99,24 @@ def run():
             # Abort was requested while waiting. We should exit
             break
 
-        if player.isPlaying():
-                currentFile = player.getPlayingFile()
-                logger.debug("Kodi is playing the file: %s" % currentFile)
-                currentTime = player.getTime()
-                logger.debug("Current player time is: %s %s" % (currentTime, type(currentTime)))
-                name, _ = os.path.splitext(currentFile)
-                try:
-                    times = open(name + ".txt", "r").read().split("\n")
-                    intro = times[0].split()
-                    player.setTime("intro", 0, float(intro[0]))
-                    player.setTime("intro", 1, float(intro[1]))
-                    # response_intro 
-                    if currentTime > float(intro[0]) and currentTime < float(intro[1]) and status_intro:
-                        status_intro = False
-                        response = DIALOG.yesno('Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
-                        if response:
-                            player.seekTime(float(intro[1])-1)
+        player.onAVStarted()
 
-                    outro = times[1].split()
-                    player.setTime("outro", 0, float(outro[0]))
-                    player.setTime("outro", 1, float(outro[1]))
-                    #response outro
-                    if currentTime > float(outro[0]) and currentTime < float(outro[1]) and status_outro:
-                        status_outro = False
-                        response = DIALOG.yesno('Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
-                        if response:
-                            player.seekTime(float(outro[1])-1)
+        if player.isPlayingVideo():
+            currentTime = player.getTime()
+            if currentTime > player.intro_start_time and currentTime < player.intro_end_time and status_intro:
+                status_intro = False
+                response = DIALOG.yesno('Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
+                if response:
+                    player.seekTime(player.intro_end_time - 1)
 
-                    logger.debug(player.getAll())
-                except:
-                    logger.debug("Exception in Service Notrobro")
+            if currentTime > player.outro_start_time and currentTime < player.outro_end_time and status_outro:
+                status_outro = False
+                response = DIALOG.yesno('Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
+                if response:
+                    player.seekTime(player.outro_end_time - 1)
         else:
             status_intro = True
             status_outro = True
 
-dfklnknkm
-
-
-
+        player.onPlayBackStopped()
+        
