@@ -16,12 +16,8 @@ class NotrobroPlayer(xbmc.Player):
     playing = False
     
     def __init__(self, *args, **kwargs):
-        self.file = None
-        self.intro_start_time = None
-        self.intro_end_time = None
-        self.outro_start_time = None
-        self.outro_end_time = None
         logger.debug("NotrobroPlayer init...")
+        self.initialState()
 
     def onAVChange(self):
         logger.debug("Player got a stream (audio or video)")
@@ -30,23 +26,31 @@ class NotrobroPlayer(xbmc.Player):
         if self.isPlayingVideo() and not self.playing:
             logger.debug("Kodi actually started playing a media item/displaying frames")
             self.playing = True
-            self.file = self.getPlayingFile()            
+            self.file = self.getPlayingFile()
+            # logger.debug("file open and read")            
             name, _ = os.path.splitext(self.file)
+
             try:
-                with open(name + ".txt", "r") as f:
-                    times = f.read()
+                with open(name + ".edl", "r") as f:
+                    times = f.readlines()
             except Exception as ex:
                 logger.debug(ex)
-            intro = times.split("\n")[0].split()
-            if intro[0] is not "None":
-                self.intro_start_time = float(intro[0])
-            if intro[1] is not "None":
-                self.intro_end_time = float(intro[1])
-            outro = times.split("\n")[1].split()
-            if outro[0] is not "None":
-                self.outro_start_time = float(outro[0])
-            if outro[1] is not "None":
-                self.outro_end_time = float(outro[1])
+
+            try:
+                intro = times[0].strip().split()
+                if intro[0] is not "None":
+                    self.intro_start_time = float(intro[0])
+                    self.intro_end_time = float(intro[1])
+            except Exception as ex:
+                logger.debug(ex)
+
+            try:
+                outro = times.split("\n")[1].split()
+                if outro[0] is not "None":
+                    self.outro_start_time = float(outro[0])
+                    self.outro_end_time = float(outro[1])
+            except Exception as ex:
+                logger.debug(ex)
 
     def onPlayBackEnded(self):
         logger.debug("Playback has ended")
@@ -54,12 +58,7 @@ class NotrobroPlayer(xbmc.Player):
     def onPlayBackStopped(self):
         if not self.isPlayingVideo() and self.playing:
             logger.debug("Playback has been stopped")
-            self.playing = False
-            self.file = None
-            self.intro_start_time = None
-            self.intro_end_time = None
-            self.outro_start_time = None
-            self.outro_end_time = None
+            self.initialState()
     
     def onPlayBackPaused(self):
         logger.debug("Playback has been paused")
@@ -69,6 +68,14 @@ class NotrobroPlayer(xbmc.Player):
 
     def onPlayBackSeek(self, time, offset):
         logger.debug("User seeked to the given time")
+
+    def initialState(self):
+        self.playing = False
+        self.file = None
+        self.intro_start_time = None
+        self.intro_end_time = None
+        self.outro_start_time = None
+        self.outro_end_time = None
 
 
 class NotbroMonitor(xbmc.Monitor):
