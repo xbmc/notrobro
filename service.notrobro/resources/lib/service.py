@@ -11,6 +11,42 @@ ADDON = xbmcaddon.Addon()
 DIALOG = xbmcgui.Dialog()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
 
+class NotrobroUtils():
+    def __init__(self, file):
+        self.times = self.getTimings(file)
+
+    def getTimings(self, file):
+        name, _ = os.path.splitext(file)        
+        timings = []
+        try:
+            with open(name + ".txt", "r") as f:
+                timings = f.readlines()
+        except Exception as ex:
+            logger.debug(ex)
+        return timings
+
+    def getIntro(self):
+        try:
+            intro = self.times[0].strip().split()
+            if intro[0] is not "None":
+                return float(intro[0]), float(intro[1])
+            else:
+                return None, None
+        except Exception as ex:
+            logger.debug(ex)
+            return None, None
+
+    def getOutro(self):
+        try:
+            outro = self.times[1].strip().split()
+            if outro[0] is not "None":
+                return float(outro[0]), float(outro[1])
+            else:
+                return None, None
+        except Exception as ex:
+            logger.debug(ex)
+            return None, None
+
 class NotrobroPlayer(xbmc.Player):
 
     playing = False
@@ -27,30 +63,9 @@ class NotrobroPlayer(xbmc.Player):
             logger.debug("Kodi actually started playing a media item/displaying frames")
             self.playing = True
             self.file = self.getPlayingFile()
-            # logger.debug("file open and read")            
-            name, _ = os.path.splitext(self.file)
-
-            try:
-                with open(name + ".edl", "r") as f:
-                    times = f.readlines()
-            except Exception as ex:
-                logger.debug(ex)
-
-            try:
-                intro = times[0].strip().split()
-                if intro[0] is not "None":
-                    self.intro_start_time = float(intro[0])
-                    self.intro_end_time = float(intro[1])
-            except Exception as ex:
-                logger.debug(ex)
-
-            try:
-                outro = times.split("\n")[1].split()
-                if outro[0] is not "None":
-                    self.outro_start_time = float(outro[0])
-                    self.outro_end_time = float(outro[1])
-            except Exception as ex:
-                logger.debug(ex)
+            utils = NotrobroUtils(self.file)
+            self.intro_start_time, self.intro_end_time = utils.getIntro()
+            self.outro_start_time, self.outro_end_time = utils.getOutro()            
 
     def onPlayBackEnded(self):
         logger.debug("Playback has ended")
