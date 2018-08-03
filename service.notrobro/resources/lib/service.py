@@ -77,6 +77,24 @@ class NotrobroPlayer(xbmc.Player):
         self.outro_start_time = None
         self.outro_end_time = None
 
+    def hasIntro(self):
+        currentTime = self.getTime()
+        if currentTime > self.intro_start_time and currentTime < self.intro_end_time:
+            return True
+        return False
+
+    def skipIntro(self):
+        self.seekTime(self.intro_end_time - 1)
+
+    def hasOutro(self):
+        currentTime = self.getTime()
+        if currentTime > self.outro_start_time and currentTime < self.outro_end_time:
+            return True
+        return False 
+
+    def skipOutro(self):
+        self.seekTime(self.outro_end_time - 1)
+
 
 class NotbroMonitor(xbmc.Monitor):
 
@@ -109,18 +127,17 @@ def run():
         player.onAVStarted()
 
         if player.isPlayingVideo():
-            currentTime = player.getTime()
-            if currentTime > player.intro_start_time and currentTime < player.intro_end_time and status_intro:
+            if player.hasIntro() and status_intro:
                 status_intro = False
                 response = DIALOG.yesno('Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
                 if response:
-                    player.seekTime(player.intro_end_time - 1)
+                    player.skipIntro()
 
-            if currentTime > player.outro_start_time and currentTime < player.outro_end_time and status_outro:
+            if player.hasOutro() and status_outro:
                 status_outro = False
                 response = DIALOG.yesno('Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
                 if response:
-                    player.seekTime(player.outro_end_time - 1)
+                    player.skipOutro()
         else:
             status_intro = True
             status_outro = True
