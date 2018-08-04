@@ -11,49 +11,42 @@ ADDON = xbmcaddon.Addon()
 DIALOG = xbmcgui.Dialog()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
 
-class NotrobroUtils():
+class NotrobroParser():
     def __init__(self, file):
         self.times = self.getTimings(file)
 
     def getTimings(self, file):
-        name, _ = os.path.splitext(file)        
+        name, _ = os.path.splitext(file)
+        fname = name + ".edl"
         timings = []
-        try:
-            with open(name + ".txt", "r") as f:
+        if os.path.exists(fname):
+            with open(fname, "r") as f:
                 timings = f.readlines()
-        except Exception as ex:
-            logger.debug(ex)
         return timings
 
-    def getIntro(self):
+    @property 
+    def intro(self):
         try:
             intro = self.times[0].strip().split()
-            if intro[0] is not "None":
-                return float(intro[0]), float(intro[1])
-            else:
-                return None, None
+            return float(intro[0]), float(intro[1])
         except Exception as ex:
             logger.debug(ex)
-            return None, None
+        return None, None
 
-    def getOutro(self):
+    @property
+    def outro(self):
         try:
             outro = self.times[1].strip().split()
-            if outro[0] is not "None":
-                return float(outro[0]), float(outro[1])
-            else:
-                return None, None
+            return float(outro[0]), float(outro[1])
         except Exception as ex:
             logger.debug(ex)
-            return None, None
+        return None, None
 
 class NotrobroPlayer(xbmc.Player):
 
-    playing = False
-    
     def __init__(self, *args, **kwargs):
         logger.debug("NotrobroPlayer init...")
-        self.initialState()
+        self._initialState()
 
     def onAVChange(self):
         logger.debug("Player got a stream (audio or video)")
@@ -63,17 +56,18 @@ class NotrobroPlayer(xbmc.Player):
             logger.debug("Kodi actually started playing a media item/displaying frames")
             self.playing = True
             self.file = self.getPlayingFile()
-            utils = NotrobroUtils(self.file)
-            self.intro_start_time, self.intro_end_time = utils.getIntro()
-            self.outro_start_time, self.outro_end_time = utils.getOutro()            
+            parser = NotrobroParser(self.file)
+            self.intro_start_time, self.intro_end_time = parser.intro
+            self.outro_start_time, self.outro_end_time = parser.outro            
 
     def onPlayBackEnded(self):
         logger.debug("Playback has ended")
+        self._initialState()
 
     def onPlayBackStopped(self):
         if not self.isPlayingVideo() and self.playing:
             logger.debug("Playback has been stopped")
-            self.initialState()
+            self._initialState()
     
     def onPlayBackPaused(self):
         logger.debug("Playback has been paused")
@@ -84,7 +78,7 @@ class NotrobroPlayer(xbmc.Player):
     def onPlayBackSeek(self, time, offset):
         logger.debug("User seeked to the given time")
 
-    def initialState(self):
+    def _initialState(self):
         self.playing = False
         self.file = None
         self.intro_start_time = None
@@ -92,20 +86,18 @@ class NotrobroPlayer(xbmc.Player):
         self.outro_start_time = None
         self.outro_end_time = None
 
+    @property
     def hasIntro(self):
         currentTime = self.getTime()
-        if currentTime > self.intro_start_time and currentTime < self.intro_end_time:
-            return True
-        return False
+        return currentTime > self.intro_start_time and currentTime < self.intro_end_time
 
     def skipIntro(self):
         self.seekTime(self.intro_end_time - 1)
 
+    @property
     def hasOutro(self):
         currentTime = self.getTime()
-        if currentTime > self.outro_start_time and currentTime < self.outro_end_time:
-            return True
-        return False 
+        return currentTime > self.outro_start_time and currentTime < self.outro_end_time
 
     def skipOutro(self):
         self.seekTime(self.outro_end_time - 1)
@@ -142,13 +134,13 @@ def run():
         player.onAVStarted()
 
         if player.isPlayingVideo():
-            if player.hasIntro() and status_intro:
+            if player.hasIntro and status_intro:
                 status_intro = False
                 response = DIALOG.yesno('Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
                 if response:
                     player.skipIntro()
 
-            if player.hasOutro() and status_outro:
+            if player.hasOutro and status_outro:
                 status_outro = False
                 response = DIALOG.yesno('Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
                 if response:
