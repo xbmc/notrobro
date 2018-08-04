@@ -15,7 +15,8 @@ class NotrobroParser():
     def __init__(self, file):
         self.times = self.getTimings(file)
 
-    def getTimings(self, file):
+    @staticmethod
+    def getTimings(file):
         name, _ = os.path.splitext(file)
         fname = name + ".edl"
         timings = []
@@ -103,7 +104,7 @@ class NotrobroPlayer(xbmc.Player):
         self.seekTime(self.outro_end_time - 1)
 
 
-class NotbroMonitor(xbmc.Monitor):
+class NotrobroMonitor(xbmc.Monitor):
 
     def __init__(self):
         logger.debug("NotrobroMonitor init...")
@@ -120,7 +121,7 @@ def run():
     player = NotrobroPlayer()
 
     # Instantiate your monitor
-    monitor = NotbroMonitor()
+    monitor = NotrobroMonitor()
     
     status_intro = True
     status_outro = True
@@ -135,13 +136,13 @@ def run():
 
         if player.isPlayingVideo():
             if player.hasIntro and status_intro:
-                status_intro = False
+                status_intro = True
                 response = DIALOG.yesno('Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
                 if response:
                     player.skipIntro()
 
             if player.hasOutro and status_outro:
-                status_outro = False
+                status_outro = True
                 response = DIALOG.yesno('Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
                 if response:
                     player.skipOutro()

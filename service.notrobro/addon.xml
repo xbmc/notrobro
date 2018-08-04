@@ -5,7 +5,7 @@
 
 
     </requires>
-    <extension point="xbmc.service" library="main.py" start="startup"/>
+    <extension point="xbmc.service" library="main.py" start="login"/>
     <extension point="xbmc.addon.metadata">
         <summary lang="en_GB">Skip intros and outros</summary>
         <description lang="en_GB"></description>
