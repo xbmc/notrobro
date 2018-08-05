@@ -10,9 +10,10 @@ import logging
 from resources.lib.NotrobroParser import NotrobroParser
 
 logger = mock.Mock()
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 def test_parser():
-    parser = NotrobroParser(os.path.join('tests','test_1.edl'), logger)
+    parser = NotrobroParser(os.path.join(dir_path, 'test_1.edl'), logger)
     intro_start_time, intro_end_time = parser.intro
     outro_start_time, outro_end_time = parser.outro  
     assert intro_start_time == 109.067
@@ -22,5 +23,5 @@ def test_parser():
     assert logger.assert_not_called
 
 def test_parser_file_not_found():
-    NotrobroParser(os.path.join('tests','does_not_exist.edl'), logger)
+    NotrobroParser(os.path.join(dir_path, 'does_not_exist.edl'), logger)
     assert logger.assert_called_once
