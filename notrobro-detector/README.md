@@ -1,15 +1,17 @@
-Prerequisites:
+# Notrobro Detector
+
+## Prerequisites:
 ffmpeg need to be installed beforehand globally and should be able to run via the command line interface. 
 
 
-Arguments:
+## Arguments:
   -h, --help            (show this help message and exit)
   --path PATH, -p PATH  (TV show directory path) (mandatory argument)
   --threshold THRESHOLD, -t THRESHOLD
                         (Threshold for scene change detection(default=0.35))
   --method METHOD, -m METHOD
                         (Method used for timings generation (all_match (default) or longest_common))
-  --force               (Process all videos in the directory (default=False))
+  --force, -f           (Process all videos in the directory (default=False))
 
 Minimum Required Command:
 	python3 detector.py --path /your/path/
