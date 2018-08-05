@@ -49,9 +49,6 @@ class NotrobroPlayer(xbmc.Player):
         logger.debug("NotrobroPlayer init...")
         self._initialState()
 
-    def onAVChange(self):
-        logger.debug("Player got a stream (audio or video)")
-
     def onAVStarted(self):
         if self.isPlayingVideo() and not self.playing:
             logger.debug("Kodi actually started playing a media item/displaying frames")
@@ -69,15 +66,6 @@ class NotrobroPlayer(xbmc.Player):
         if not self.isPlayingVideo() and self.playing:
             logger.debug("Playback has been stopped")
             self._initialState()
-    
-    def onPlayBackPaused(self):
-        logger.debug("Playback has been paused")
-
-    def onPlayBackResumed(self):
-        logger.debug("Playback was resumed")
-
-    def onPlayBackSeek(self, time, offset):
-        logger.debug("User seeked to the given time")
 
     def _initialState(self):
         self.playing = False
@@ -132,23 +120,18 @@ def run():
             # Abort was requested while waiting. We should exit
             break
 
-        player.onAVStarted()
-
         if player.isPlayingVideo():
             if player.hasIntro and status_intro:
-                status_intro = True
+                status_intro = False
                 response = DIALOG.yesno('Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
                 if response:
                     player.skipIntro()
 
             if player.hasOutro and status_outro:
-                status_outro = True
+                status_outro = False
                 response = DIALOG.yesno('Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
                 if response:
                     player.skipOutro()
         else:
             status_intro = True
-            status_outro = True
-
-        player.onPlayBackStopped()
-        
+            status_outro = True        
