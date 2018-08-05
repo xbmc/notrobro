@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from resources.lib import kodiutils
+from resources.lib.NotrobroParser import NotrobroParser
 import logging
 import xbmc
 import xbmcgui
@@ -10,40 +11,6 @@ import os
 ADDON = xbmcaddon.Addon()
 DIALOG = xbmcgui.Dialog()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
-
-class NotrobroParser():
-    def __init__(self, file):
-        self.times = self.getTimings(file)
-
-    @staticmethod
-    def getTimings(file):
-        name, _ = os.path.splitext(file)
-        fname = name + ".edl"
-        timings = []
-        if os.path.exists(fname):
-            with open(fname, "r") as f:
-                timings = f.readlines()
-        else:
-            logger.debug("Timings file not found.")
-        return timings
-
-    @property 
-    def intro(self):
-        try:
-            intro = self.times[0].strip().split()
-            return float(intro[0]), float(intro[1])
-        except Exception as ex:
-            logger.debug(ex)
-        return None, None
-
-    @property
-    def outro(self):
-        try:
-            outro = self.times[1].strip().split()
-            return float(outro[0]), float(outro[1])
-        except Exception as ex:
-            logger.debug(ex)
-        return None, None
 
 class NotrobroPlayer(xbmc.Player):
 
@@ -56,7 +23,7 @@ class NotrobroPlayer(xbmc.Player):
             logger.debug("Kodi actually started playing a media item/displaying frames")
             self.playing = True
             self.file = self.getPlayingFile()
-            parser = NotrobroParser(self.file)
+            parser = NotrobroParser(self.file, logger)
             self.intro_start_time, self.intro_end_time = parser.intro
             self.outro_start_time, self.outro_end_time = parser.outro            
 
@@ -83,7 +50,7 @@ class NotrobroPlayer(xbmc.Player):
         return currentTime > self.intro_start_time and currentTime < self.intro_end_time
 
     def skipIntro(self):
-        self.seekTime(self.intro_end_time - 1)
+        self.seekTime(self.intro_end_time)
 
     @property
     def hasOutro(self):
@@ -91,7 +58,7 @@ class NotrobroPlayer(xbmc.Player):
         return currentTime > self.outro_start_time and currentTime < self.outro_end_time
 
     def skipOutro(self):
-        self.seekTime(self.outro_end_time - 1)
+        self.seekTime(self.outro_end_time)
 
 
 class NotrobroMonitor(xbmc.Monitor):
@@ -99,8 +66,8 @@ class NotrobroMonitor(xbmc.Monitor):
     def __init__(self):
         logger.debug("NotrobroMonitor init...")
 
-    def onSettingsChanged(self):
-        logger.debug("You can use this event to change any variables that depend on the addon settings")
+    # def onSettingsChanged(self):
+    #     logger.debug("You can use this event to change any variables that depend on the addon settings")
 
 
 def run():
@@ -113,8 +80,8 @@ def run():
     # Instantiate your monitor
     monitor = NotrobroMonitor()
     
-    status_intro = True
-    status_outro = True
+    handle_intro = True
+    handle_outro = True
 
     while not monitor.abortRequested():
         # Sleep/wait for abort for 1 second
@@ -123,17 +90,19 @@ def run():
             break
 
         if player.isPlayingVideo():
-            if player.hasIntro and status_intro:
-                status_intro = False
+            if player.hasIntro and handle_intro:
+                handle_intro = False
                 response = DIALOG.yesno('Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
                 if response:
                     player.skipIntro()
+                    handle_intro = True
 
-            if player.hasOutro and status_outro:
-                status_outro = False
+            if player.hasOutro and handle_outro:
+                handle_outro = False
                 response = DIALOG.yesno('Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
                 if response:
                     player.skipOutro()
+                    handle_outro = True
         else:
-            status_intro = True
-            status_outro = True        
+            handle_intro = True
+            handle_outro = True        
