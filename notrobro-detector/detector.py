@@ -169,10 +169,10 @@ def gen_timings_processed(videos_process, threshold, method):
 			intro_end_cur = scene_cur[indices[-1][1] + 1]
 
 			if len(intro_times)==0:
-				time_string = str(intro_start_prev) + " " + str(intro_end_prev) + " 0" #cut in edl files
+				time_string = str(intro_start_prev) + " " + str(intro_end_prev) + " 4" #cut in edl files
 				intro_times.append(time_string)
 
-			time_string = str(intro_start_cur) + " " + str(intro_end_cur) + " 0" #cut in edl files
+			time_string = str(intro_start_cur) + " " + str(intro_end_cur) + " 4" #cut in edl files
 			intro_times.append(time_string)
 		elif method == "longest_common":
 			indices = longest_common_subarray(hash_prev, hash_cur)
@@ -184,10 +184,10 @@ def gen_timings_processed(videos_process, threshold, method):
 			intro_end_cur = scene_cur[indices[-1][1] + 1]
 
 			if len(intro_times)==0:
-				time_string = str(intro_start_prev) + " " + str(intro_end_prev) + " 0" #cut in edl files
+				time_string = str(intro_start_prev) + " " + str(intro_end_prev) + " 4" #cut in edl files
 				intro_times.append(time_string)
 
-			time_string = str(intro_start_cur) + " " + str(intro_end_cur) + " 0" #cut in edl files
+			time_string = str(intro_start_cur) + " " + str(intro_end_cur) + " 4" #cut in edl files
 			intro_times.append(time_string)
 		
 		hash_prev = hash_cur
@@ -216,10 +216,10 @@ def gen_timings_processed(videos_process, threshold, method):
 			outro_end_cur = scene_cur[indices[-1][1]]
 
 		if len(outro_times)==0:
-			time_string = str(outro_start_prev) + " " + str(outro_end_prev) + " 0" #cut in edl files
+			time_string = str(outro_start_prev) + " " + str(outro_end_prev) + " 5" #cut in edl files
 			outro_times.append(time_string)
 
-		time_string = str(outro_start_cur) + " " + str(outro_end_cur) + " 0" #cut in edl files
+		time_string = str(outro_start_cur) + " " + str(outro_end_cur) + " 5" #cut in edl files
 		outro_times.append(time_string)
 
 		hash_prev = hash_cur
@@ -232,7 +232,7 @@ def gen_timings_processed(videos_process, threshold, method):
 
 
 def create_edl(videos, intro_timings, outro_timings):
-	for i,file in enumerate(videos):
+	for i, file in enumerate(videos):
 		filename, _ = os.path.splitext(file)
 		suffix = '.edl'
 		edl_file = filename + suffix
