@@ -320,7 +320,7 @@ def main():
                           help='Threshold for scene change detection(default=0.35)', default='0.35')
     argparse.add_argument('--method', '-m', type=str,
                           help='Method used for timings generation (all_match or longest_common)', default='all_match')
-    argparse.add_argument('--force', action='store_true',
+    argparse.add_argument('--force', '-f', action='store_true',
                           help='Process all videos in the directory')
     args = argparse.parse_args()
 
