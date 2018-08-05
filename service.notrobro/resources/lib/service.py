@@ -23,6 +23,8 @@ class NotrobroParser():
         if os.path.exists(fname):
             with open(fname, "r") as f:
                 timings = f.readlines()
+        else:
+            logger.debug("Timings file not found.")
         return timings
 
     @property 
