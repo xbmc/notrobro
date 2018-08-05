@@ -14,7 +14,7 @@ matrix:
   
 # command to install dependencies
 install: 
-  - pip install python-dateutil pytest
+  - pip install python-dateutil pytest mock
 # command to run tests
 script: py.test -v
 
