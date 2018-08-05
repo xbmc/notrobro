@@ -12,6 +12,7 @@ ADDON = xbmcaddon.Addon()
 DIALOG = xbmcgui.Dialog()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
 
+
 class NotrobroPlayer(xbmc.Player):
 
     def __init__(self, *args, **kwargs):
@@ -20,12 +21,13 @@ class NotrobroPlayer(xbmc.Player):
 
     def onAVStarted(self):
         if self.isPlayingVideo() and not self.playing:
-            logger.debug("Kodi actually started playing a media item/displaying frames")
+            logger.debug(
+                "Kodi actually started playing a media item/displaying frames")
             self.playing = True
             self.file = self.getPlayingFile()
             parser = NotrobroParser(self.file, logger)
             self.intro_start_time, self.intro_end_time = parser.intro
-            self.outro_start_time, self.outro_end_time = parser.outro            
+            self.outro_start_time, self.outro_end_time = parser.outro
 
     def onPlayBackEnded(self):
         logger.debug("Playback has ended")
@@ -79,7 +81,7 @@ def run():
 
     # Instantiate your monitor
     monitor = NotrobroMonitor()
-    
+
     handle_intro = True
     handle_outro = True
 
@@ -92,17 +94,19 @@ def run():
         if player.isPlayingVideo():
             if player.hasIntro and handle_intro:
                 handle_intro = False
-                response = DIALOG.yesno('Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
+                response = DIALOG.yesno(
+                    'Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
                 if response:
                     player.skipIntro()
                     handle_intro = True
 
             if player.hasOutro and handle_outro:
                 handle_outro = False
-                response = DIALOG.yesno('Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
+                response = DIALOG.yesno(
+                    'Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
                 if response:
                     player.skipOutro()
                     handle_outro = True
         else:
             handle_intro = True
-            handle_outro = True        
+            handle_outro = True
