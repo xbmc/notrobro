@@ -5,8 +5,8 @@ import os
 
 class NotrobroParser():
     def __init__(self, file, logger):
-        self.times = self.getTimings(file)
         self.logger = logger
+        self.times = self.getTimings(file)
 
     def getTimings(self, file):
         name, _ = os.path.splitext(file)
