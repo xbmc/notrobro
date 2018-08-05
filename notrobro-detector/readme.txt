@@ -12,20 +12,20 @@ Arguments:
   --force               (Process all videos in the directory (default=False))
 
 Minimum Required Command:
-	python3 hash_run.py --path /your/path/
-	python3 hash_run.py -p /your/path/
+	python3 detector.py --path /your/path/
+	python3 detector.py -p /your/path/
 
 Process all videos in the directory:
-	python3 hash_run.py --path /your/path/ --force
-	python3 hash_run.py -p /your/path/ --force
+	python3 detector.py --path /your/path/ --force
+	python3 detector.py -p /your/path/ --force
 
 Change Threshold:
-	python3 hash_run.py --path /your/path/ --threshold 0.5
-	python3 hash_run.py -p /your/path/ -t 0.5
+	python3 detector.py --path /your/path/ --threshold 0.5
+	python3 detector.py -p /your/path/ -t 0.5
 
 Change Method:
-	python3 hash_run.py --path /your/path/ --method longest_common
- 	python3 hash_run.py -p /your/path/ -m longest_common
+	python3 detector.py --path /your/path/ --method longest_common
+ 	python3 detector.py -p /your/path/ -m longest_common
 
 
 (Tested on Ubuntu 16.04)
