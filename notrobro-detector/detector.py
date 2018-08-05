@@ -260,9 +260,8 @@ def create_edl(videos, intro_timings, outro_timings):
         filename, _ = os.path.splitext(file)
         suffix = '.edl'
         edl_file = filename + suffix
-        f = open(edl_file, "w")
-        f.write(intro_timings[i] + "\n" + outro_timings[i])
-        f.close()
+        with open(edl_file, 'w') as f:
+        	f.write(intro_timings[i] + "\n" + outro_timings[i] + "\n")
 
 
 def generate(path, threshold, method, force):
