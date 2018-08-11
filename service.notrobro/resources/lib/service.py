@@ -2,6 +2,7 @@
 
 from resources.lib import kodiutils
 from resources.lib.NotrobroParser import NotrobroParser
+from resources.lib.Skip import Skip
 import logging
 import xbmc
 import xbmcgui
@@ -17,6 +18,7 @@ class NotrobroPlayer(xbmc.Player):
 
     def __init__(self, *args, **kwargs):
         logger.debug("NotrobroPlayer init...")
+        self.skip = Skip("script-skip-Notrobro.xml", ADDON.getAddonInfo('path'), "default", "1080i")
         self._initialState()
 
     def onAVStarted(self):
@@ -82,9 +84,6 @@ def run():
     # Instantiate your monitor
     monitor = NotrobroMonitor()
 
-    handle_intro = True
-    handle_outro = True
-
     while not monitor.abortRequested():
         # Sleep/wait for abort for 1 second
         if monitor.waitForAbort(1):
@@ -92,21 +91,16 @@ def run():
             break
 
         if player.isPlayingVideo():
-            if player.hasIntro and handle_intro:
-                handle_intro = False
-                response = DIALOG.yesno(
-                    'Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
-                if response:
+            if player.hasIntro:
+                player.skip.show()
+                if player.skip.isSkip is True:
                     player.skipIntro()
-                    handle_intro = True
+                    player.skip.isSkip = False
+                    player.skip.close()
 
-            if player.hasOutro and handle_outro:
-                handle_outro = False
-                response = DIALOG.yesno(
-                    'Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
-                if response:
+            if player.hasOutro:
+                player.skip.show()
+                if player.skip.isSkip is True:
                     player.skipOutro()
-                    handle_outro = True
-        else:
-            handle_intro = True
-            handle_outro = True
+                    player.skip.isSkip = False
+                    player.skip.close()
