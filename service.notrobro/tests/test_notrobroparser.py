@@ -7,7 +7,7 @@ import sys
 import mock
 import logging
 
-from resources.lib.NotrobroParser import NotrobroParser
+from resources.lib.notrobroparser import NotrobroParser
 
 logger = mock.Mock()
 dir_path = os.path.dirname(os.path.realpath(__file__))
