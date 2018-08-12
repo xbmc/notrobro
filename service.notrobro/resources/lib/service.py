@@ -18,7 +18,6 @@ class NotrobroPlayer(xbmc.Player):
 
     def __init__(self, *args, **kwargs):
         logger.debug("NotrobroPlayer init...")
-        self.skip = Skip("service-notrobro-buttonskip.xml", ADDON.getAddonInfo('path'), "default", "1080i")
         self._initialState()
 
     def onAVStarted(self):
@@ -84,6 +83,9 @@ def run():
     # Instantiate your monitor
     monitor = NotrobroMonitor()
 
+    #Instantiate the button
+    buttonskip = Skip("service-notrobro-buttonskip.xml", ADDON.getAddonInfo('path'), "default", "1080i")
+
     while not monitor.abortRequested():
         # Sleep/wait for abort for 1 second
         if monitor.waitForAbort(1):
@@ -92,15 +94,11 @@ def run():
 
         if player.isPlayingVideo():
             if player.hasIntro:
-                player.skip.show()
-                if player.skip.isSkip is True:
-                    player.skipIntro()
-                    player.skip.isSkip = False
-                    player.skip.close()
+                buttonskip.show_with_callback(player.skipIntro)
+            else:
+                buttonskip.close()
 
             if player.hasOutro:
-                player.skip.show()
-                if player.skip.isSkip is True:
-                    player.skipOutro()
-                    player.skip.isSkip = False
-                    player.skip.close()
+                buttonskip.show_with_callback(player.skipOutro)
+            else:
+                buttonskip.close()
