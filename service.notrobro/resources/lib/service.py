@@ -18,7 +18,7 @@ class NotrobroPlayer(xbmc.Player):
 
     def __init__(self, *args, **kwargs):
         logger.debug("NotrobroPlayer init...")
-        self.skip = Skip("script-skip-Notrobro.xml", ADDON.getAddonInfo('path'), "default", "1080i")
+        self.skip = Skip("service-notrobro-buttonskip.xml", ADDON.getAddonInfo('path'), "default", "1080i")
         self._initialState()
 
     def onAVStarted(self):
