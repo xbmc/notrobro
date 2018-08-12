@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from resources.lib import kodiutils
-from resources.lib.NotrobroParser import NotrobroParser
-from resources.lib.Skip import Skip
+from resources.lib.notrobroparser import NotrobroParser
+from resources.lib.skip import Skip
 import logging
 import xbmc
 import xbmcgui
