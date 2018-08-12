@@ -19,3 +19,7 @@ msgstr ""
 msgctxt "#32001"
 msgid "Debug"
 msgstr ""
+
+msgctxt "#32002"
+msgid "Skip"
+msgstr "Skip"

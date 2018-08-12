@@ -9,7 +9,7 @@
 			<top>800</top>
 			<width>200</width>
 			<height>100</height>
-			<label>Skip</label>
+			<label>$ADDON[service.notrobro 32002]</label>
 			<align>center</align>
 			<aligny>center</aligny>
 			<textcolor>ffffffff</textcolor>
