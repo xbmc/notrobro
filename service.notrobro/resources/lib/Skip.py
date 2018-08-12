@@ -12,10 +12,7 @@ class Skip(xbmcgui.WindowXMLDialog):
 
     def __init__(self, *args, **kwargs):
         self.isSkip = False
-        if OS_MACHINE[0:5] == 'armv7':
-            xbmcgui.WindowXMLDialog.__init__(self)
-        else:
-            xbmcgui.WindowXMLDialog.__init__(self, *args, **kwargs)
+        xbmcgui.WindowXMLDialog.__init__(self, *args, **kwargs)
 
     def onClick(self, controlID):
         logger.debug('Notrobro onclick: ' + str(controlID))
