@@ -95,10 +95,7 @@ def run():
         if player.isPlayingVideo():
             if player.hasIntro:
                 buttonskip.show_with_callback(player.skipIntro)
-            else:
-                buttonskip.close()
-
-            if player.hasOutro:
+            elif player.hasOutro:
                 buttonskip.show_with_callback(player.skipOutro)
             else:
                 buttonskip.close()

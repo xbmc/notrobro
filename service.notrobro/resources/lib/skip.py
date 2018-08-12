@@ -11,7 +11,6 @@ logger = logging.getLogger(ADDON.getAddonInfo('id'))
 class Skip(xbmcgui.WindowXMLDialog):
 
     def __init__(self, *args, **kwargs):
-        self.isSkip = False
         xbmcgui.WindowXMLDialog.__init__(self, *args, **kwargs)
 
     def show_with_callback(self, callback):
