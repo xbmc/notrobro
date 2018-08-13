@@ -5,6 +5,9 @@ matrix:
     - python: "3.4"
     - python: "3.5"
     - python: "3.6"
+    - python: "3.7"
+      dist: xenial
+      sudo: required
   allow_failures:
     - python: "nightly"
   
@@ -13,4 +16,3 @@ install:
   - pip install pytest mock
 # command to run tests
 script: py.test -v
-
