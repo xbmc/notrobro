@@ -1,10 +1,8 @@
 import xbmc
 import xbmcgui
-from platform import machine
 import logging
 import xbmcaddon
 
-OS_MACHINE = machine()
 ADDON = xbmcaddon.Addon()
 logger = logging.getLogger(ADDON.getAddonInfo('id'))
 
