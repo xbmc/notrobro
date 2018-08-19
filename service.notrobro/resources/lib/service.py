@@ -98,4 +98,6 @@ def run():
             elif player.hasOutro:
                 buttonskip.show_with_callback(player.skipOutro)
             else:
-                buttonskip.close()
+                if buttonskip.get_isVisible() is True:
+                    buttonskip.close()
+                    buttonskip.set_isVisible()
