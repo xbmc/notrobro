@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from resources.lib import kodiutils
-from resources.lib.NotrobroParser import NotrobroParser
+from resources.lib.notrobroparser import NotrobroParser
+from resources.lib.skip import Skip
 import logging
 import xbmc
 import xbmcgui
@@ -82,8 +83,8 @@ def run():
     # Instantiate your monitor
     monitor = NotrobroMonitor()
 
-    handle_intro = True
-    handle_outro = True
+    #Instantiate the button
+    buttonskip = Skip("service-notrobro-buttonskip.xml", ADDON.getAddonInfo('path'), "default", "1080i")
 
     while not monitor.abortRequested():
         # Sleep/wait for abort for 1 second
@@ -92,21 +93,11 @@ def run():
             break
 
         if player.isPlayingVideo():
-            if player.hasIntro and handle_intro:
-                handle_intro = False
-                response = DIALOG.yesno(
-                    'Intro', 'Skip Intro?', yeslabel='Yes', nolabel='No')
-                if response:
-                    player.skipIntro()
-                    handle_intro = True
-
-            if player.hasOutro and handle_outro:
-                handle_outro = False
-                response = DIALOG.yesno(
-                    'Outro', 'Skip Outro?', yeslabel='Yes', nolabel='No')
-                if response:
-                    player.skipOutro()
-                    handle_outro = True
-        else:
-            handle_intro = True
-            handle_outro = True
+            if player.hasIntro:
+                buttonskip.show_with_callback(player.skipIntro)
+            elif player.hasOutro:
+                buttonskip.show_with_callback(player.skipOutro)
+            else:
+                if buttonskip.isButtonVisible is True:
+                    buttonskip.close()
+                    buttonskip.setVisibility()
