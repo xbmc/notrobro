@@ -14,17 +14,18 @@ class Skip(xbmcgui.WindowXMLDialog):
 
     def show_with_callback(self, callback):
         self.callback = callback
-        if self.get_isVisible() is False:
+        if self.isButtonVisible is False:
             self.show()
-            self.set_isVisible()
+            self.setVisibility()
 
     def onClick(self, controlID):
         logger.debug('Notrobro onclick: ' + str(controlID))
         if controlID == 1:
             self.callback()
 
-    def get_isVisible(self):
+    @property
+    def isButtonVisible(self):
         return self.isVisible    
 
-    def set_isVisible(self):
+    def setVisibility(self):
         self.isVisible = not self.isVisible
