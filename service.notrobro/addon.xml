@@ -5,22 +5,16 @@
 
 
     </requires>
-    <extension point="xbmc.service" library="main.py" start="login"/>
+    <extension point="xbmc.service" library="main.py"/>
     <extension point="xbmc.addon.metadata">
+        <source>https://github.com/xbmc/notrobro</source>
         <summary lang="en_GB">Skip intros and outros</summary>
         <description lang="en_GB"></description>
-        <language></language>
         <platform>all</platform>
         <license>GPL-3.0</license>
-        <forum></forum>
         <website>www.kodi.tv</website>
         <email>mohit15060@iiitd.ac.in</email>
-        <source></source>
-        <news></news>
-        <disclaimer></disclaimer>
         <assets>
-            <icon>resources/icon.png</icon>
-            <fanart>resources/fanart.jpg</fanart>
         </assets>
     </extension>
 </addon>

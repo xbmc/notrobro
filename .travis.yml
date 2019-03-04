@@ -1,18 +1,29 @@
 language: python
-matrix:
-  include:
-    - python: "2.7"
-    - python: "3.4"
-    - python: "3.5"
-    - python: "3.6"
-    - python: "3.7"
-      dist: xenial
-      sudo: required
-  allow_failures:
-    - python: "nightly"
-  
+dist: xenial
+sudo: required
+
+python:
+  - 2.7
+  - 3.4
+  - 3.5
+  - 3.6
+  - 3.7
+
 # command to install dependencies
-install: 
+install:
   - pip install pytest mock
+
 # command to run tests
 script: py.test -v
+
+jobs:
+  include:
+    - stage: Kodi-Addon-Check
+      python: 3.6
+
+      # command to install dependencies
+      install:
+        - pip install kodi-addon-checker
+      # command to run tests
+      script:
+        - kodi-addon-checker --branch=leia  -- service.notrobro/;
