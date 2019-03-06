@@ -1,4 +1,6 @@
 from argparse import ArgumentParser
+import signal
+import sys
 import os
 import glob
 import imagehash
@@ -314,6 +316,11 @@ def generate(path, threshold, method, force):
     print("Timing files created.")
 
 
+def signal_handler(sig, frame):
+        print('You pressed Ctrl+C!')
+        sys.exit(0)
+
+
 def main():
     argparse = ArgumentParser()
     argparse.add_argument('--path', '-p', type=str,
@@ -325,6 +332,7 @@ def main():
     argparse.add_argument('--force', '-f', action='store_true',
                           help='Process all videos in the directory')
     args = argparse.parse_args()
+    signal.signal(signal.SIGINT, signal_handler)
 
     if args.path is None:
         print("Enter a directory path.")
