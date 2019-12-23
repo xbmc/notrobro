@@ -184,12 +184,14 @@ class Detector:
         outro_times = []
 
         # Processing for Intros
+        print("Finding Intros")
+        print("\t%s" % videos_process[0])
+
         hash_prev, scene_prev = self.get_hash_video(
             videos_process[0], "intro")
 
-        print("Finding Intros")
-        print("\t%s" % videos_process[0])
         for i in range(1, len(videos_process)):
+            print("\t%s" % videos_process[i])
             hash_cur, scene_cur = self.get_hash_video(
                 videos_process[i], "intro")
             if self.method == "all_match":
@@ -230,15 +232,15 @@ class Detector:
             hash_prev = hash_cur
             scene_prev = scene_cur
 
-            print("\t%s" % videos_process[i])
-
         # Processing for Outros
-        hash_prev, scene_prev = self.get_hash_video(
-            videos_process[0], "outro")
         print('Finding Outros')
         print('\t%s' % videos_process[0])
 
+        hash_prev, scene_prev = self.get_hash_video(
+            videos_process[0], "outro")
+
         for i in range(1, len(videos_process)):
+            print('\t%s' % videos_process[i])
             hash_cur, scene_cur = self.get_hash_video(
                 videos_process[i], "outro")
             indices = self.common_elements_outro(hash_prev, hash_cur)
@@ -266,8 +268,6 @@ class Detector:
 
             hash_prev = hash_cur
             scene_prev = scene_cur
-
-            print('\t%s' % videos_process[i])
 
         return intro_times, outro_times
 
