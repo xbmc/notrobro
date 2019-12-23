@@ -11,9 +11,14 @@ import copy
 
 
 class Detector:
+    threshold = 0.35  # default threshold, can be passed as arg
+    method = "all_match"  # default method, can be passed as arg
+    debug = False
 
 
-    def  __init__(self, debug=False):
+    def  __init__(self, threshold, method, debug=False):
+        self.threshold = threshold
+        self.method = method
         self.debug = debug
 
 
@@ -64,8 +69,8 @@ class Detector:
         return to_sec
 
 
-    def get_scene_transitions(self, path, threshold, category):
-        th = threshold
+    def get_scene_transitions(self, path, category):
+        th = self.threshold
         end_time = 360  # in seconds (can be put in arguments as well)
         # in seconds from end of video (can be put in arguments as well)
         outro_end_time = -300
@@ -99,8 +104,8 @@ class Detector:
         return times
 
 
-    def get_hash_video(self, path, threshold, category):
-        scene_transitions = self.get_scene_transitions(path, threshold, category)
+    def get_hash_video(self, path, category):
+        scene_transitions = self.get_scene_transitions(path, category)
         if category == "outro":
             duration = "ffmpeg -i " + '"' + path + '"' + ">duration 2>&1"
             subprocess.call(duration, shell=True)
@@ -174,20 +179,20 @@ class Detector:
         return indices
 
 
-    def gen_timings_processed(self, videos_process, threshold, method):
+    def gen_timings_processed(self, videos_process):
         intro_times = []
         outro_times = []
 
         # Processing for Intros
         hash_prev, scene_prev = self.get_hash_video(
-            videos_process[0], threshold, "intro")
+            videos_process[0], "intro")
 
         print("Finding Intros")
         print("\t%s" % videos_process[0])
         for i in range(1, len(videos_process)):
             hash_cur, scene_cur = self.get_hash_video(
-                videos_process[i], threshold, "intro")
-            if method == "all_match":
+                videos_process[i], "intro")
+            if self.method == "all_match":
                 indices = self.common_elements(hash_prev, hash_cur)
 
                 intro_start_prev = scene_prev[indices[0][0]]
@@ -204,7 +209,7 @@ class Detector:
                 time_string = str(intro_start_cur) + " " + \
                     str(intro_end_cur) + " 4"  # cut in edl files
                 intro_times.append(time_string)
-            elif method == "longest_common":
+            elif self.method == "longest_common":
                 indices = self.longest_common_subarray(hash_prev, hash_cur)
 
                 intro_start_prev = scene_prev[indices[0][0]]
@@ -229,13 +234,13 @@ class Detector:
 
         # Processing for Outros
         hash_prev, scene_prev = self.get_hash_video(
-            videos_process[0], threshold, "outro")
+            videos_process[0], "outro")
         print('Finding Outros')
         print('\t%s' % videos_process[0])
 
         for i in range(1, len(videos_process)):
             hash_cur, scene_cur = self.get_hash_video(
-                videos_process[i], threshold, "outro")
+                videos_process[i], "outro")
             indices = self.common_elements_outro(hash_prev, hash_cur)
             outro_start_prev = scene_prev[indices[0][0]]
             outro_start_cur = scene_cur[indices[0][1]]
@@ -279,7 +284,7 @@ class Detector:
                     f.write(outro_timings[i] + "\n")
 
 
-    def generate(self, path, threshold, method, force):
+    def generate(self, path, force):
         files = os.listdir(path)
         all_files = [os.path.join(path, i) for i in files]
 
@@ -315,12 +320,12 @@ class Detector:
             except:
                 comp_vid = videos[videos.index(vid) + 1]
             intro_times, outro_times = self.gen_timings_processed(
-                [comp_vid, vid], threshold, method)
+                [comp_vid, vid])
             self.create_edl([vid], [intro_times[1]], [outro_times[1]])
         else:
             videos_process.sort()  # basic ordering for videos by sorting based on season and episode
             intro_times, outro_times = self.gen_timings_processed(
-                videos_process, threshold, method)
+                videos_process)
             self.create_edl(videos_process, intro_times, outro_times)
 
         print("Timing files created.")
@@ -362,8 +367,10 @@ def main():
         print("Enter correct method: (1) all_match (2) longest_common")
         exit()
 
-    detector = Detector(args.debug)
-    detector.generate(args.path, args.threshold, args.method, args.force)
+    print('Threshold: %s' % args.threshold)
+    print('Method: %s' % args.method)
+    detector = Detector(args.threshold, args.method, args.debug)
+    detector.generate(args.path, args.force)
 
 
 if __name__ == '__main__':
