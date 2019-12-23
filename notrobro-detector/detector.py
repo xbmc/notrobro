@@ -12,6 +12,11 @@ import copy
 
 class Detector:
 
+
+  def  __init__(self, debug=False):
+      self.debug = debug
+
+
   def get_hash(self, path):
       return imagehash.phash(Image.open(path))
 
@@ -88,6 +93,7 @@ class Detector:
       out = file.read()
       file.close()
       times = self.get_timings(out, category)
+
       os.remove("./scenes")
 
       return times
@@ -109,7 +115,7 @@ class Detector:
               scene_transitions[i] = str(float(scene_transitions[i]) + begin)
       name, _ = os.path.splitext(path)
       hashlist, _ = self.get_hash_from_dir(name)
-      if os.path.exists(name):
+      if os.path.exists(name) and not self.debug:
           shutil.rmtree(name)
       return hashlist, scene_transitions
 
@@ -335,6 +341,8 @@ def main():
                           help='Method used for timings generation (all_match or longest_common)', default='all_match')
     argparse.add_argument('--force', '-f', action='store_true',
                           help='Process all videos in the directory')
+    argparse.add_argument('--debug', '-d', action='store_true',
+                          help='Run in debug mode, keeps temp files for analysis')
     args = argparse.parse_args()
     signal.signal(signal.SIGINT, signal_handler)
 
@@ -354,7 +362,7 @@ def main():
         print("Enter correct method: (1) all_match (2) longest_common")
         exit()
 
-    detector = Detector()
+    detector = Detector(args.debug)
     detector.generate(args.path, args.threshold, args.method, args.force)
 
 
