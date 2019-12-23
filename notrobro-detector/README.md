@@ -3,9 +3,10 @@
 ## Prerequisites:
 ffmpeg need to be installed beforehand globally and should be able to run via the command line interface. 
 
-Make sure you have any requirement python libraries by running: 
+Make sure you have any required python libraries by running: 
 
 ```
+
 pip3 -r requirements.txt
 
 ```
