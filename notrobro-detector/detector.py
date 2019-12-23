@@ -176,7 +176,8 @@ class Detector:
       hash_prev, scene_prev = self.get_hash_video(
           videos_process[0], threshold, "intro")
 
-      print(0, "Intro")
+      print("Finding Intros")
+      print("\t%s" % videos_process[0])
       for i in range(1, len(videos_process)):
           hash_cur, scene_cur = self.get_hash_video(
               videos_process[i], threshold, "intro")
@@ -218,12 +219,13 @@ class Detector:
           hash_prev = hash_cur
           scene_prev = scene_cur
 
-          print(i, "Intro")
+        print("\t%s" % videos_process[0])
 
       # Processing for Outros
       hash_prev, scene_prev = self.get_hash_video(
           videos_process[0], threshold, "outro")
-      print(0, "Outro")
+      print('Finding Outros')
+      print('\t%s' % videos_process[0])
 
       for i in range(1, len(videos_process)):
           hash_cur, scene_cur = self.get_hash_video(
@@ -254,7 +256,7 @@ class Detector:
           hash_prev = hash_cur
           scene_prev = scene_cur
 
-          print(i, "Outro")
+        print('\t%s' % videos_process[i])
 
       return intro_times, outro_times
 
