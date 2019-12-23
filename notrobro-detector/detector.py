@@ -219,7 +219,7 @@ class Detector:
           hash_prev = hash_cur
           scene_prev = scene_cur
 
-        print("\t%s" % videos_process[0])
+          print("\t%s" % videos_process[0])
 
       # Processing for Outros
       hash_prev, scene_prev = self.get_hash_video(
@@ -256,7 +256,7 @@ class Detector:
           hash_prev = hash_cur
           scene_prev = scene_cur
 
-        print('\t%s' % videos_process[i])
+          print('\t%s' % videos_process[i])
 
       return intro_times, outro_times
 
