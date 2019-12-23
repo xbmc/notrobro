@@ -12,11 +12,11 @@ import copy
 
 class Detector:
 
-  def get_hash(path):
+  def get_hash(self, path):
       return imagehash.phash(Image.open(path))
 
 
-  def get_hash_from_dir(path):
+  def get_hash_from_dir(self, path):
       images = os.listdir(path)
       images.sort()
       hashlist = []
@@ -25,7 +25,7 @@ class Detector:
       return hashlist, images
 
 
-  def get_timings(out, category):
+  def get_timings(self, out, category):
       to_find = "pts_time:"
       length = len(to_find)
       loc = -1
@@ -45,7 +45,7 @@ class Detector:
       return times
 
 
-  def get_duration(out):
+  def get_duration(self, out):
       to_find = "Duration: "
       length = len(to_find)
       loc = out.find(to_find, 0)
@@ -59,7 +59,7 @@ class Detector:
       return to_sec
 
 
-  def get_scene_transitions(path, threshold, category):
+  def get_scene_transitions(self, path, threshold, category):
       th = threshold
       end_time = 360  # in seconds (can be put in arguments as well)
       # in seconds from end of video (can be put in arguments as well)
@@ -87,13 +87,13 @@ class Detector:
       file = open("scenes", "r")
       out = file.read()
       file.close()
-      times = get_timings(out, category)
+      times = self.get_timings(out, category)
       os.remove("./scenes")
 
       return times
 
 
-  def get_hash_video(path, threshold, category):
+  def get_hash_video(self, path, threshold, category):
       scene_transitions = self.get_scene_transitions(path, threshold, category)
       if category == "outro":
           duration = "ffmpeg -i " + '"' + path + '"' + ">duration 2>&1"
@@ -101,7 +101,7 @@ class Detector:
           file = open("duration", "r")
           out = file.read()
           file.close()
-          total_time = get_duration(out)
+          total_time = self.get_duration(out)
           os.remove("./duration")
           outro_end_time = -300
           begin = total_time + outro_end_time
@@ -118,7 +118,7 @@ class Detector:
   # (1) All common matches
 
 
-  def common_elements(list1, list2):
+  def common_elements(self, list1, list2):
       common = []
       for i, element in enumerate(list1):
           try:
@@ -131,7 +131,7 @@ class Detector:
   # small modification for outros
 
 
-  def common_elements_outro(list1, list2):
+  def common_elements_outro(self, list1, list2):
       common = []
       for i, element1 in enumerate(list1):
           for j, element2 in enumerate(list2):
@@ -147,7 +147,7 @@ class Detector:
   # (2) Longest continuos match
 
 
-  def longest_common_subarray(l1, l2):
+  def longest_common_subarray(self, l1, l2):
       subarray = []
       indices = []
       len1, len2 = len(l1), len(l2)
@@ -168,7 +168,7 @@ class Detector:
       return indices
 
 
-  def gen_timings_processed(videos_process, threshold, method):
+  def gen_timings_processed(self, videos_process, threshold, method):
       intro_times = []
       outro_times = []
 
@@ -261,7 +261,7 @@ class Detector:
       return intro_times, outro_times
 
 
-  def create_edl(videos, intro_timings, outro_timings):
+  def create_edl(self, videos, intro_timings, outro_timings):
       for i, file in enumerate(videos):
           filename, _ = os.path.splitext(file)
           suffix = '.edl'
@@ -273,7 +273,7 @@ class Detector:
                   f.write(outro_timings[i] + "\n")
 
 
-  def generate(path, threshold, method, force):
+  def generate(self, path, threshold, method, force):
       files = os.listdir(path)
       all_files = [os.path.join(path, i) for i in files]
 
