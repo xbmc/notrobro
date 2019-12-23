@@ -354,7 +354,7 @@ def main():
         print("Enter correct method: (1) all_match (2) longest_common")
         exit()
 
-    detector = Dector()
+    detector = Detector()
     detector.generate(args.path, args.threshold, args.method, args.force)
 
 
