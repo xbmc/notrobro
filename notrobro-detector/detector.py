@@ -11,6 +11,7 @@ import copy
 
 
 class Detector:
+    jpg_folder = './jpgs'  # location location of jpg images from video
     threshold = 0.35  # default threshold, can be passed as arg
     method = "all_match"  # default method, can be passed as arg
     debug = False
@@ -76,7 +77,7 @@ class Detector:
         outro_end_time = -300
 
         name, _ = os.path.splitext(path)
-
+        name = os.path.join(self.jpg_folder, os.path.basename(name))
         if os.path.exists(name):
             shutil.rmtree(name)
         os.mkdir(name)
@@ -119,9 +120,11 @@ class Detector:
             for i in range(len(scene_transitions)):
                 scene_transitions[i] = str(float(scene_transitions[i]) + begin)
         name, _ = os.path.splitext(path)
+        name = os.path.join(self.jpg_folder, os.path.basename(name))
         hashlist, _ = self.get_hash_from_dir(name)
         if os.path.exists(name) and not self.debug:
             shutil.rmtree(name)
+
         return hashlist, scene_transitions
 
     # Methods
@@ -298,6 +301,9 @@ class Detector:
             print("Add atleast 1 more video of the TV show to the directory for processing.")
             exit()
 
+        if(not os.path.exists(self.jpg_folder)):
+            os.mkdir(self.jpg_folder)
+
         # get videos which don't have a skip timings file (currently edl) according to --force parameter
         videos_process = []
         if force is False:
@@ -327,6 +333,9 @@ class Detector:
             intro_times, outro_times = self.gen_timings_processed(
                 videos_process)
             self.create_edl(videos_process, intro_times, outro_times)
+
+        if(not self.debug):
+            shutil.rmtree(self.jpg_folder)
 
         print("Timing files created.")
 
