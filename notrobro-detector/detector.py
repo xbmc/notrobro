@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from abc import ABC, abstractmethod
 import signal
 import sys
 import os
@@ -10,16 +11,82 @@ import shutil
 import copy
 
 
+class DetectorMethod(ABC):
+
+    @abstractmethod
+    def get_common_intro(self, l1, l2):
+        pass
+
+    @abstractmethod
+    def get_common_outro(self, l1, l2):
+        pass
+
+
+class AllMatchMethod(DetectorMethod):
+
+    def get_common_intro(self, l1, l2):
+        common = []
+        for i, element in enumerate(l1):
+            try:
+                ind = l2.index(element)
+                common.append((i, ind))
+            except:
+                pass
+        return common
+
+    def get_common_outro(self, l1, l2):
+        common = []
+        for i, element1 in enumerate(l1):
+            for j, element2 in enumerate(l2):
+                if (element1-element2) <= 5:
+                    if len(common) != 0 and common[-1][1] < j:
+                        common.append((i, j))
+                        break
+                    elif len(common) == 0:
+                        common.append((i, j))
+                        break
+        return common
+
+
+class LongestContinousMethod(DetectorMethod):
+
+    def get_common_intro(self, l1, l2):
+        subarray = []
+        indices = []
+        len1, len2 = len(l1), len(l2)
+        for i in range(len1):
+            for j in range(len2):
+                temp = 0
+                cur_array = []
+                cur_indices = []
+                # hamming distance
+                while ((i+temp < len1) and (j+temp < len2) and (l1[i+temp]-l2[j+temp]) <= 30):
+                    cur_array.append(l2[j+temp])
+                    cur_indices.append((i+temp, j+temp))
+                    temp += 1
+                if (len(cur_array) > len(subarray)):
+                    subarray = cur_array
+                    indices = cur_indices
+        # return subarray, indices
+        return indices
+
+    def get_common_outro(self, l1, l2):
+        return []
+
 class Detector:
     threshold = 0.35  # default threshold, can be passed as arg
-    method = "all_match"  # default method, can be passed as arg
+    method = None  # default method class
     debug = False
 
 
     def  __init__(self, threshold, method, debug=False):
         self.threshold = threshold
-        self.method = method
         self.debug = debug
+
+        if(method == 'all_match'):
+            self.method = AllMatchMethod()
+        elif(method == 'longest_common'):
+            self.method = LongestContinousMethod()
 
 
     def get_hash(self, path):
@@ -124,60 +191,6 @@ class Detector:
             shutil.rmtree(name)
         return hashlist, scene_transitions
 
-    # Methods
-
-    # (1) All common matches
-
-
-    def common_elements(self, list1, list2):
-        common = []
-        for i, element in enumerate(list1):
-            try:
-                ind = list2.index(element)
-                common.append((i, ind))
-            except:
-                pass
-        return common
-
-    # small modification for outros
-
-
-    def common_elements_outro(self, list1, list2):
-        common = []
-        for i, element1 in enumerate(list1):
-            for j, element2 in enumerate(list2):
-                if (element1-element2) <= 5:
-                    if len(common) != 0 and common[-1][1] < j:
-                        common.append((i, j))
-                        break
-                    elif len(common) == 0:
-                        common.append((i, j))
-                        break
-        return common
-
-    # (2) Longest continuos match
-
-
-    def longest_common_subarray(self, l1, l2):
-        subarray = []
-        indices = []
-        len1, len2 = len(l1), len(l2)
-        for i in range(len1):
-            for j in range(len2):
-                temp = 0
-                cur_array = []
-                cur_indices = []
-                # hamming distance
-                while ((i+temp < len1) and (j+temp < len2) and (l1[i+temp]-l2[j+temp]) <= 30):
-                    cur_array.append(l2[j+temp])
-                    cur_indices.append((i+temp, j+temp))
-                    temp += 1
-                if (len(cur_array) > len(subarray)):
-                    subarray = cur_array
-                    indices = cur_indices
-        # return subarray, indices
-        return indices
-
 
     def gen_timings_processed(self, videos_process):
         result = {}  # dict containing path: {intro,outro} information
@@ -197,41 +210,22 @@ class Detector:
 
             hash_cur, scene_cur = self.get_hash_video(
                 videos_process[i], "intro")
-            if self.method == "all_match":
-                indices = self.common_elements(hash_prev, hash_cur)
+            indices = self.method.get_common_intro(hash_prev, hash_cur)
 
-                intro_start_prev = scene_prev[indices[0][0]]
-                intro_start_cur = scene_cur[indices[0][1]]
+            intro_start_prev = scene_prev[indices[0][0]]
+            intro_start_cur = scene_cur[indices[0][1]]
 
-                intro_end_prev = scene_prev[indices[-1][0] + 1]
-                intro_end_cur = scene_cur[indices[-1][1] + 1]
+            intro_end_prev = scene_prev[indices[-1][0] + 1]
+            intro_end_cur = scene_cur[indices[-1][1] + 1]
 
-                if 'intro' not in result[video_prev]:
-                    time_string = str(intro_start_prev) + " " + \
-                        str(intro_end_prev) + " 4"  # cut in edl files
-                    result[video_prev]['intro'] = time_string
+            if 'intro' not in result[video_prev]:
+                time_string = str(intro_start_prev) + " " + \
+                    str(intro_end_prev) + " 4"  # cut in edl files
+                result[video_prev]['intro'] = time_string
 
-                time_string = str(intro_start_cur) + " " + \
+            time_string = str(intro_start_cur) + " " + \
                     str(intro_end_cur) + " 4"  # cut in edl files
-                result[videos_process[i]]['intro'] = time_string
-
-            elif self.method == "longest_common":
-                indices = self.longest_common_subarray(hash_prev, hash_cur)
-
-                intro_start_prev = scene_prev[indices[0][0]]
-                intro_start_cur = scene_cur[indices[0][1]]
-
-                intro_end_prev = scene_prev[indices[-1][0] + 1]
-                intro_end_cur = scene_cur[indices[-1][1] + 1]
-
-                if 'intro' not in result[video_prev]:
-                    time_string = str(intro_start_prev) + " " + \
-                        str(intro_end_prev) + " 4"  # cut in edl files
-                    result[video_prev]['intro'] = time_string
-
-                time_string = str(intro_start_cur) + " " + \
-                    str(intro_end_cur) + " 4"  # cut in edl files
-                result[videos_process[i]]['intro'] = time_string
+            result[videos_process[i]]['intro'] = time_string
 
             video_prev = videos_process[i]
             hash_prev = hash_cur
@@ -249,7 +243,7 @@ class Detector:
             print('\t%s' % videos_process[i])
             hash_cur, scene_cur = self.get_hash_video(
                 videos_process[i], "outro")
-            indices = self.common_elements_outro(hash_prev, hash_cur)
+            indices = self.method.get_common_outro(hash_prev, hash_cur)
             outro_start_prev = scene_prev[indices[0][0]]
             outro_start_cur = scene_cur[indices[0][1]]
 
