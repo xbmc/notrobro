@@ -180,18 +180,21 @@ class Detector:
 
 
     def gen_timings_processed(self, videos_process):
-        intro_times = []
-        outro_times = []
+        result = {}  # dict containing path: {intro,outro} information
 
         # Processing for Intros
         print("Finding Intros")
         print("\t%s" % videos_process[0])
 
+        video_prev = videos_process[0]
+        result[video_prev] = {}
         hash_prev, scene_prev = self.get_hash_video(
             videos_process[0], "intro")
 
         for i in range(1, len(videos_process)):
             print("\t%s" % videos_process[i])
+            result[videos_process[i]] = {}
+
             hash_cur, scene_cur = self.get_hash_video(
                 videos_process[i], "intro")
             if self.method == "all_match":
@@ -203,14 +206,15 @@ class Detector:
                 intro_end_prev = scene_prev[indices[-1][0] + 1]
                 intro_end_cur = scene_cur[indices[-1][1] + 1]
 
-                if len(intro_times) == 0:
+                if 'intro' not in result[video_prev]:
                     time_string = str(intro_start_prev) + " " + \
                         str(intro_end_prev) + " 4"  # cut in edl files
-                    intro_times.append(time_string)
+                    result[video_prev]['intro'] = time_string
 
                 time_string = str(intro_start_cur) + " " + \
                     str(intro_end_cur) + " 4"  # cut in edl files
-                intro_times.append(time_string)
+                result[videos_process[i]]['intro'] = time_string
+
             elif self.method == "longest_common":
                 indices = self.longest_common_subarray(hash_prev, hash_cur)
 
@@ -220,15 +224,16 @@ class Detector:
                 intro_end_prev = scene_prev[indices[-1][0] + 1]
                 intro_end_cur = scene_cur[indices[-1][1] + 1]
 
-                if len(intro_times) == 0:
+                if 'intro' not in result[video_prev]:
                     time_string = str(intro_start_prev) + " " + \
                         str(intro_end_prev) + " 4"  # cut in edl files
-                    intro_times.append(time_string)
+                    result[video_prev]['intro'] = time_string
 
                 time_string = str(intro_start_cur) + " " + \
                     str(intro_end_cur) + " 4"  # cut in edl files
-                intro_times.append(time_string)
+                result[videos_process[i]]['intro'] = time_string
 
+            video_prev = videos_process[i]
             hash_prev = hash_cur
             scene_prev = scene_cur
 
@@ -236,6 +241,7 @@ class Detector:
         print('Finding Outros')
         print('\t%s' % videos_process[0])
 
+        video_prev = videos_process[0]
         hash_prev, scene_prev = self.get_hash_video(
             videos_process[0], "outro")
 
@@ -257,31 +263,36 @@ class Detector:
             except:
                 outro_end_cur = scene_cur[indices[-1][1]]
 
-            if len(outro_times) == 0:
+            if 'outro' not in result[video_prev]:
                 time_string = str(outro_start_prev) + " " + \
                     str(outro_end_prev) + " 5"  # cut in edl files
-                outro_times.append(time_string)
+                result[video_prev]['outro'] = time_string
 
             time_string = str(outro_start_cur) + " " + \
                 str(outro_end_cur) + " 5"  # cut in edl files
-            outro_times.append(time_string)
+            result[videos_process[i]]['outro'] = time_string
 
+            video_prev = videos_process[i]
             hash_prev = hash_cur
             scene_prev = scene_cur
 
-        return intro_times, outro_times
+        print(str(result))
+        return result
 
 
-    def create_edl(self, videos, intro_timings, outro_timings):
-        for i, file in enumerate(videos):
+    def create_edl(self, timings):
+        for file in timings.keys():
             filename, _ = os.path.splitext(file)
             suffix = '.edl'
             edl_file = filename + suffix
-            with open(edl_file, 'w') as f:
-                if i <= len(intro_timings) - 1:
-                    f.write(intro_timings[i] + "\n")
-                if i <= len(outro_timings) - 1:
-                    f.write(outro_timings[i] + "\n")
+
+            # only write the file if a timing exists for this video
+            if('intro' in timings[file] or 'outro' in timings[file]):
+                with open(edl_file, 'w') as f:
+                    if 'intro' in timings[file]:
+                        f.write(timings[file]['intro'] + "\n")
+                    if 'outro' in timings[file]:
+                        f.write(timings[file]['outro'] + "\n")
 
 
     def generate(self, path, force):
@@ -319,14 +330,14 @@ class Detector:
                 comp_vid = videos[videos.index(vid) - 1]
             except:
                 comp_vid = videos[videos.index(vid) + 1]
-            intro_times, outro_times = self.gen_timings_processed(
+            timings = self.gen_timings_processed(
                 [comp_vid, vid])
-            self.create_edl([vid], [intro_times[1]], [outro_times[1]])
+            self.create_edl(timings)
         else:
             videos_process.sort()  # basic ordering for videos by sorting based on season and episode
-            intro_times, outro_times = self.gen_timings_processed(
+            timings = self.gen_timings_processed(
                 videos_process)
-            self.create_edl(videos_process, intro_times, outro_times)
+            self.create_edl(timings)
 
         print("Timing files created.")
 
