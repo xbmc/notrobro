@@ -21,6 +21,31 @@ class DetectorMethod(ABC):
     def get_common_outro(self, l1, l2):
         pass
 
+class AllMethods(DetectorMethod):
+    methods = []
+
+    def __init(self):
+        self.methods.append(AllMatchMethod())
+        self.methods.append(LongestContinousMethod())
+
+
+    def get_common_intro(self, l1, l2):
+        result = []
+        i = 0
+        while(i < len(self.methods) and len(result) == 0):
+            result = self.methods[i].get_common_intro(l1,l2)
+            i = i + 1
+
+        return result
+
+    def get_common_outro(self, l1, l2):
+        result = []
+        i = 0
+        while(i < len(self.methods) and len(result) == 0):
+            result = self.methods[i].get_common_outro(l1,l2)
+            i = i + 1
+
+        return result
 
 class AllMatchMethod(DetectorMethod):
 
@@ -71,11 +96,12 @@ class LongestContinousMethod(DetectorMethod):
         return indices
 
     def get_common_outro(self, l1, l2):
+        # not implemented for this method yet
         return []
 
 class Detector:
     threshold = 0.35  # default threshold, can be passed as arg
-    method = None  # default method class
+    method = None  # detector method class
     debug = False
 
 
@@ -87,6 +113,8 @@ class Detector:
             self.method = AllMatchMethod()
         elif(method == 'longest_common'):
             self.method = LongestContinousMethod()
+        elif(method == 'all'):
+            self.method = AllMethods()
 
 
     def get_hash(self, path):
@@ -348,7 +376,7 @@ def main():
     argparse.add_argument('--threshold', '-t', type=str,
                           help='Threshold for scene change detection(default=0.35)', default='0.35')
     argparse.add_argument('--method', '-m', type=str,
-                          help='Method used for timings generation (all_match or longest_common)', default='all_match')
+                          help='Method used for timings generation (all_match, longest_common or all). "all" method will run every method until a match is found or no methods are left to try', default='all')
     argparse.add_argument('--force', '-f', action='store_true',
                           help='Process all videos in the directory')
     argparse.add_argument('--debug', '-d', action='store_true',
@@ -368,8 +396,8 @@ def main():
                 print("Path: " + args.path + " is not a directory.")
                 exit()
 
-    if args.method != "all_match" and args.method != "longest_common":
-        print("Enter correct method: (1) all_match (2) longest_common")
+    if args.method not in ["all_match", "longest_common", "all"]:
+        print("Enter correct method: (1) all_match (2) longest_common or (3) all")
         exit()
 
     print('Threshold: %s' % args.threshold)
