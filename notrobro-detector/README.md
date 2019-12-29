@@ -17,7 +17,7 @@ Argument | Description
   --path PATH, -p PATH | TV show directory path (mandatory argument)
   -h, --help | show this help message and exit
   --threshold THRESHOLD, -t THRESHOLD | Threshold for scene change detection(default=0.35)
-  --method METHOD, -m METHOD | Method used for timings generation (all_match (default) or longest_common)
+  --method METHOD, -m METHOD | Method used for timings generation (all (default), all_match or longest_common)
   --force, -f | Process all videos in the directory (default=False)
 
 Minimum Required Command:

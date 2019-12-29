@@ -382,7 +382,7 @@ def main():
     argparse.add_argument('--threshold', '-t', type=str,
                           help='Threshold for scene change detection(default=0.35)', default='0.35')
     argparse.add_argument('--method', '-m', type=str,
-                          help='Method used for timings generation (all_match, longest_common or all). "all" method will run every method until a match is found or no methods are left to try', default='all')
+                          help='Method used for timings generation (all, all_match, or longest_common). "all" method will run every method until a match is found or no methods are left to try', default='all')
     argparse.add_argument('--force', '-f', action='store_true',
                           help='Process all videos in the directory')
     argparse.add_argument('--debug', '-d', action='store_true',
@@ -403,7 +403,7 @@ def main():
                 exit()
 
     if args.method not in ["all_match", "longest_common", "all"]:
-        print("Enter correct method: (1) all_match (2) longest_common or (3) all")
+        print("Enter correct method: (1) all (2) all_match or (3) longest_common")
         exit()
 
     print('Threshold: %s' % args.threshold)
