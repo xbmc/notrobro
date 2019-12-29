@@ -256,7 +256,7 @@ class Detector:
                         str(intro_end_cur) + " 4"  # cut in edl files
                 result[videos_process[i]]['intro'] = time_string
             else:
-                print('\t No intro found %s : %s' % (video_prev, videos_process[i]))
+                print('\tNo intro found %s : %s' % (video_prev, videos_process[i]))
 
             video_prev = videos_process[i]
             hash_prev = hash_cur
@@ -299,7 +299,7 @@ class Detector:
                     str(outro_end_cur) + " 5"  # cut in edl files
                 result[videos_process[i]]['outro'] = time_string
             else:
-                print('\t No intro found %s : %s' % (video_prev, videos_process[i]))
+                print('\tNo outro found %s : %s' % (video_prev, videos_process[i]))
 
             video_prev = videos_process[i]
             hash_prev = hash_cur
