@@ -305,7 +305,6 @@ class Detector:
             hash_prev = hash_cur
             scene_prev = scene_cur
 
-        print(str(result))
         return result
 
 
