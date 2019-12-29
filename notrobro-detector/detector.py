@@ -240,20 +240,23 @@ class Detector:
                 videos_process[i], "intro")
             indices = self.method.get_common_intro(hash_prev, hash_cur)
 
-            intro_start_prev = scene_prev[indices[0][0]]
-            intro_start_cur = scene_cur[indices[0][1]]
+            if(len(indices) > 0):
+                intro_start_prev = scene_prev[indices[0][0]]
+                intro_start_cur = scene_cur[indices[0][1]]
 
-            intro_end_prev = scene_prev[indices[-1][0] + 1]
-            intro_end_cur = scene_cur[indices[-1][1] + 1]
+                intro_end_prev = scene_prev[indices[-1][0] + 1]
+                intro_end_cur = scene_cur[indices[-1][1] + 1]
 
-            if 'intro' not in result[video_prev]:
-                time_string = str(intro_start_prev) + " " + \
-                    str(intro_end_prev) + " 4"  # cut in edl files
-                result[video_prev]['intro'] = time_string
+                if 'intro' not in result[video_prev]:
+                    time_string = str(intro_start_prev) + " " + \
+                        str(intro_end_prev) + " 4"  # cut in edl files
+                    result[video_prev]['intro'] = time_string
 
-            time_string = str(intro_start_cur) + " " + \
-                    str(intro_end_cur) + " 4"  # cut in edl files
-            result[videos_process[i]]['intro'] = time_string
+                time_string = str(intro_start_cur) + " " + \
+                        str(intro_end_cur) + " 4"  # cut in edl files
+                result[videos_process[i]]['intro'] = time_string
+            else:
+                print('\t No intro found %s : %s' % (video_prev, videos_process[i]))
 
             video_prev = videos_process[i]
             hash_prev = hash_cur
@@ -272,27 +275,31 @@ class Detector:
             hash_cur, scene_cur = self.get_hash_video(
                 videos_process[i], "outro")
             indices = self.method.get_common_outro(hash_prev, hash_cur)
-            outro_start_prev = scene_prev[indices[0][0]]
-            outro_start_cur = scene_cur[indices[0][1]]
 
-            try:
-                outro_end_prev = scene_prev[indices[-1][0] + 1]
-            except:
-                outro_end_prev = scene_prev[indices[-1][0]]
+            if(len(indices) > 0):
+                outro_start_prev = scene_prev[indices[0][0]]
+                outro_start_cur = scene_cur[indices[0][1]]
 
-            try:
-                outro_end_cur = scene_cur[indices[-1][1] + 1]
-            except:
-                outro_end_cur = scene_cur[indices[-1][1]]
+                try:
+                    outro_end_prev = scene_prev[indices[-1][0] + 1]
+                except:
+                    outro_end_prev = scene_prev[indices[-1][0]]
 
-            if 'outro' not in result[video_prev]:
-                time_string = str(outro_start_prev) + " " + \
-                    str(outro_end_prev) + " 5"  # cut in edl files
-                result[video_prev]['outro'] = time_string
+                try:
+                    outro_end_cur = scene_cur[indices[-1][1] + 1]
+                except:
+                    outro_end_cur = scene_cur[indices[-1][1]]
 
-            time_string = str(outro_start_cur) + " " + \
-                str(outro_end_cur) + " 5"  # cut in edl files
-            result[videos_process[i]]['outro'] = time_string
+                if 'outro' not in result[video_prev]:
+                    time_string = str(outro_start_prev) + " " + \
+                        str(outro_end_prev) + " 5"  # cut in edl files
+                    result[video_prev]['outro'] = time_string
+
+                time_string = str(outro_start_cur) + " " + \
+                    str(outro_end_cur) + " 5"  # cut in edl files
+                result[videos_process[i]]['outro'] = time_string
+            else:
+                print('\t No intro found %s : %s' % (video_prev, videos_process[i]))
 
             video_prev = videos_process[i]
             hash_prev = hash_cur
