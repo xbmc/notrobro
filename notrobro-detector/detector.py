@@ -24,7 +24,7 @@ class DetectorMethod(ABC):
 class AllMethods(DetectorMethod):
     methods = []
 
-    def __init(self):
+    def __init__(self):
         self.methods.append(AllMatchMethod())
         self.methods.append(LongestContinousMethod())
 
