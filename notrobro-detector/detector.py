@@ -327,6 +327,8 @@ class Detector:
                     if 'outro' in timings[file]:
                         f.write(timings[file]['outro'] + "\n")
 
+        print('Timing files created.')
+
 
     def generate(self, path, force):
         files = os.listdir(path)
@@ -376,8 +378,6 @@ class Detector:
 
         if(not self.debug):
             shutil.rmtree(self.jpg_folder)
-
-        print("Timing files created.")
 
 
 class DetectorThreadManager():
