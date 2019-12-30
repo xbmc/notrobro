@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 from abc import ABC, abstractmethod
 from PIL import Image
-import concurrent.futures as cf
 import signal
 import sys
 import os
@@ -11,7 +10,7 @@ import threading
 import subprocess
 import shutil
 import copy
-
+import time
 
 class DetectorMethod(ABC):
 
@@ -398,17 +397,16 @@ class DetectorThreadManager():
         # start the walk
         for root, dirs, files in os.walk(base_dir):
             for name in dirs:
-                dirs_process.append(os.path.join(root,name))
+                dirs_process.append(os.path.join(root, name))
 
         # process each dir as a thread, up to max threads at a time
         workers = 2
         while(len(dirs_process) > 0):
-            with cf.ThreadPoolExecutor(max_workers=workers) as executor:
-                futures = []
-                while(len(dirs_process) > 0 and len(futures) < workers):
-                    futures.append(executor.submit(self.start_thread, dirs_process.pop()))
-                # wait for these threads to complete
-                cf.wait(futures)
+            while(len(dirs_process) > 0 and len(threading.enumerate()) <= workers):
+                t = threading.Thread(target=self.start_thread, args=(dirs_process.pop(),))
+                t.start()
+
+            time.sleep(2)
 
         print('All directories processed')
 
@@ -416,6 +414,7 @@ class DetectorThreadManager():
         print('Starting detector in: %s' % dir)
         detector = Detector(self.args.threshold, self.args.method, self.args.debug)
         detector.generate(dir, self.args.force)
+
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
