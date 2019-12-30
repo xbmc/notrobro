@@ -331,7 +331,9 @@ class Detector:
 
 
     def generate(self, path, force):
-        #print(threading.current_thread().ident)
+        # jpg folder should have unique path for this thread
+        self.jpg_folder = './%d' % threading.current_thread().ident
+
         files = os.listdir(path)
         all_files = [os.path.join(path, i) for i in files]
 
@@ -377,8 +379,8 @@ class Detector:
                 videos_process)
             self.create_edl(timings)
 
-        #if(not self.debug):
-            #shutil.rmtree(self.jpg_folder)
+        if(not self.debug):
+            shutil.rmtree(self.jpg_folder)
 
 
 class DetectorThreadManager():
