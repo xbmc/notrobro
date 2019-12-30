@@ -358,7 +358,7 @@ class Detector:
 
         if len(videos_process) == 0:
             print("No videos to process.")
-            exit()
+            break
         elif len(videos_process) == 1:
             vid = videos_process[0]
             videos.sort()  # basic ordering for videos by sorting based on season and episode
