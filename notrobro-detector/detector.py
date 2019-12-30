@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
 from PIL import Image
+import concurrent.futures as cf
 import signal
 import sys
 import os
@@ -331,6 +331,7 @@ class Detector:
 
 
     def generate(self, path, force):
+        #print(threading.current_thread().ident)
         files = os.listdir(path)
         all_files = [os.path.join(path, i) for i in files]
 
@@ -376,25 +377,40 @@ class Detector:
                 videos_process)
             self.create_edl(timings)
 
-        if(not self.debug):
-            shutil.rmtree(self.jpg_folder)
+        #if(not self.debug):
+            #shutil.rmtree(self.jpg_folder)
 
 
 class DetectorThreadManager():
     args = None  # args as passed from the CLI
-    executor = None  # thread pool executor
 
     def __init__(self, args):
         self.args = args
-        self.executor = ThreadPoolExecutor(max_workers=1)
 
     def start(self, base_dir):
+        dirs_process = []
+
+        # add base directory
+        dirs_process.append(base_dir)
+
         # start the walk
         for root, dirs, files in os.walk(base_dir):
             for name in dirs:
-                self.executor.submit(self.start_thread(os.path.join(root,name)))
+                dirs_process.append(os.path.join(root,name))
 
-    def start_thread(self,dir):
+        # process each dir as a thread, up to max threads at a time
+        workers = 2
+        while(len(dirs_process) > 0):
+            with cf.ThreadPoolExecutor(max_workers=workers) as executor:
+                futures = []
+                while(len(dirs_process) > 0 and len(futures) < workers):
+                    futures.append(executor.submit(self.start_thread, dirs_process.pop()))
+                # wait for these threads to complete
+                cf.wait(futures)
+
+        print('All directories processed')
+
+    def start_thread(self, dir):
         print('Starting detector in: %s' % dir)
         detector = Detector(self.args.threshold, self.args.method, self.args.debug)
         detector.generate(dir, self.args.force)
