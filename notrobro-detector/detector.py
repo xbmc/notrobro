@@ -358,7 +358,6 @@ class Detector:
 
         if len(videos_process) == 0:
             print("No videos to process.")
-            break
         elif len(videos_process) == 1:
             vid = videos_process[0]
             videos.sort()  # basic ordering for videos by sorting based on season and episode
@@ -383,15 +382,17 @@ class Detector:
 
 class DetectorThreadManager():
     args = None  # args as passed from the CLI
+    executor = None  # thread pool executor
 
     def __init__(self, args):
         self.args = args
+        self.executor = ThreadPoolExecutor(max_workers=1)
 
     def start(self, base_dir):
         # start the walk
         for root, dirs, files in os.walk(base_dir):
             for name in dirs:
-                self.start_thread(os.path.join(root,name))
+                self.executor.submit(self.start_thread(os.path.join(root,name)))
 
     def start_thread(self,dir):
         print('Starting detector in: %s' % dir)
