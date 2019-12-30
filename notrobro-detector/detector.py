@@ -1,11 +1,13 @@
 from argparse import ArgumentParser
 from abc import ABC, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
+from PIL import Image
 import signal
 import sys
 import os
 import glob
 import imagehash
-from PIL import Image
+import threading
 import subprocess
 import shutil
 import copy
@@ -379,9 +381,26 @@ class Detector:
         print("Timing files created.")
 
 
+class DetectorThreadManager():
+    args = None  # args as passed from the CLI
+
+    def __init__(self, args):
+        self.args = args
+
+    def start(self, base_dir):
+        # start the walk
+        for root, dirs, files in os.walk(base_dir):
+            for name in dirs:
+                self.start_thread(os.path.join(root,name))
+
+    def start_thread(self,dir):
+        print('Starting detector in: %s' % dir)
+        detector = Detector(self.args.threshold, self.args.method, self.args.debug)
+        detector.generate(dir, self.args.force)
+
 def signal_handler(sig, frame):
-        print('You pressed Ctrl+C!')
-        sys.exit(0)
+    print('You pressed Ctrl+C!')
+    sys.exit(0)
 
 
 def main():
@@ -417,8 +436,11 @@ def main():
 
     print('Threshold: %s' % args.threshold)
     print('Method: %s' % args.method)
-    detector = Detector(args.threshold, args.method, args.debug)
-    detector.generate(args.path, args.force)
+    #detector = Detector(args.threshold, args.method, args.debug)
+    #detector.generate(args.path, args.force)
+
+    detector = DetectorThreadManager(args)
+    detector.start(args.path)
 
 
 if __name__ == '__main__':
