@@ -262,7 +262,6 @@ class Detector:
         # if there is only 1 video in the directory
         if len(videos) == 1:
             logging.info("Add at least 1 more video of the TV show to the directory for processing.")
-            exit()
 
         if(not os.path.exists(self.jpg_folder)):
             os.mkdir(self.jpg_folder)
