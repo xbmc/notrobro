@@ -408,6 +408,10 @@ class DetectorThreadManager():
 
             time.sleep(2)
 
+        # wait for any final threads to finish
+        while(len(threading.enumerate()) > 1):
+            time.sleep(2)
+
         print('All directories processed')
 
     def start_thread(self, dir):
