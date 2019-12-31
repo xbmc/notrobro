@@ -439,7 +439,7 @@ def signal_handler(sig, frame):
 def main():
     argparse = ArgumentParser()
     argparse.add_argument('--path', '-p', type=str,
-                          help='TV show directory path')
+                          help='TV show directory path', required=True)
     argparse.add_argument('--threshold', '-t', type=str,
                           help='Threshold for scene change detection (default=0.35)', default='0.35')
     argparse.add_argument('--method', '-m', type=str, choices=["all_match", "longest_common", "all"],
@@ -459,17 +459,13 @@ def main():
                         datefmt="%H:%M:%S")
     logging.debug('DEBUG logging enabled')
 
-    if args.path is None:
-        logging.info("Enter a directory path.")
+    if not os.path.exists(args.path):
+        logging.info("TV show directory: " + args.path + " not found.")
         exit()
     else:
-        if not os.path.exists(args.path):
-            logging.info("TV show directory: " + args.path + " not found.")
+        if not os.path.isdir(args.path):
+            logging.info("Path: " + args.path + " is not a directory.")
             exit()
-        else:
-            if not os.path.isdir(args.path):
-                logging.info("Path: " + args.path + " is not a directory.")
-                exit()
 
     logging.info('Threshold: %s' % args.threshold)
     logging.info('Method: %s' % args.method)
