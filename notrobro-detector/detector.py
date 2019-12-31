@@ -234,8 +234,7 @@ class Detector:
         result = {}  # dict containing path: {intro,outro} information
 
         # Processing for Intros
-        logging.info("Finding Intros")
-        logging.info("%s" % videos_process[0])
+        logging.info("Detecting intro for: %s" % os.path.basename(videos_process[0]))
 
         video_prev = videos_process[0]
         result[video_prev] = {}
@@ -243,7 +242,7 @@ class Detector:
             videos_process[0], "intro")
 
         for i in range(1, len(videos_process)):
-            logging.info("%s" % videos_process[i])
+            logging.info("Detecting intro for: %s" % os.path.basename(videos_process[i]))
             result[videos_process[i]] = {}
 
             hash_cur, scene_cur = self.get_hash_video(
@@ -266,22 +265,22 @@ class Detector:
                         str(intro_end_cur) + " 4"  # cut in edl files
                 result[videos_process[i]]['intro'] = time_string
             else:
-                logging.info('No intro found %s : %s' % (video_prev, videos_process[i]))
+                logging.info('No intro found for: %s' % os.path.basename(videos_process[i]))
+                logging.debug('Comparison file: %s' % os.path.basename(video_prev))
 
             video_prev = videos_process[i]
             hash_prev = hash_cur
             scene_prev = scene_cur
 
         # Processing for Outros
-        logging.info('Finding Outros')
-        logging.info('%s' % videos_process[0])
+        logging.info('Detecting outro for: %s' % os.path.basename(videos_process[0]))
 
         video_prev = videos_process[0]
         hash_prev, scene_prev = self.get_hash_video(
             videos_process[0], "outro")
 
         for i in range(1, len(videos_process)):
-            logging.info('%s' % videos_process[i])
+            logging.info('Detecting outro for: %s' % os.path.basename(videos_process[i]))
             hash_cur, scene_cur = self.get_hash_video(
                 videos_process[i], "outro")
             indices = self.method.get_common_outro(hash_prev, hash_cur)
@@ -309,7 +308,8 @@ class Detector:
                     str(outro_end_cur) + " 5"  # cut in edl files
                 result[videos_process[i]]['outro'] = time_string
             else:
-                logging.info('No outro found %s : %s' % (video_prev, videos_process[i]))
+                logging.info('No outro found for: %s' % os.path.basename(videos_process[i]))
+                logging.debug('Comparison file: %s' % os.path.basename(video_prev))
 
             video_prev = videos_process[i]
             hash_prev = hash_cur
