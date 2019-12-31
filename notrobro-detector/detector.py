@@ -111,9 +111,11 @@ class Detector:
     debug = False
 
 
-    def  __init__(self, threshold, method, debug=False):
+    def  __init__(self, threshold, method, level='info'):
         self.threshold = threshold
-        self.debug = debug
+
+        if(level.lower() == 'debug'):
+            self.debug = True
 
         if(method == 'all_match'):
             self.method = AllMatchMethod()
@@ -424,7 +426,7 @@ class DetectorThreadManager():
 
     def start_thread(self, dir):
         logging.info('Starting detector in: %s' % dir)
-        detector = Detector(self.args.threshold, self.args.method, self.args.debug)
+        detector = Detector(self.args.threshold, self.args.method, self.args.log)
         detector.generate(dir, self.args.force)
 
 
@@ -446,14 +448,16 @@ def main():
                           help='How many directories to process (threads) at one time (default=4)', default=4)
     argparse.add_argument('--force', '-f', action='store_true',
                           help='Process all videos in the directory')
-    argparse.add_argument('--debug', '-d', action='store_true',
-                          help='Run in debug mode, keeps temp files for analysis')
+    argparse.add_argument('--log', '-l', type=str, choices=['info', 'debug'],
+                          help='Run in debug mode, keeps temp files for analysis', default='info')
     args = argparse.parse_args()
     signal.signal(signal.SIGINT, signal_handler)
 
-    if(args.debug):
-        logging.setLevel(logging.DEBUG)
-        logging.debug('DEBUG logging enabled')
+    # set the log level
+    log_level = getattr(logging, args.log.upper())
+    logging.basicConfig(format="%(levelname)s %(asctime)s %(threadName)s: %(message)s", level=log_level,
+                        datefmt="%H:%M:%S")
+    logging.debug('DEBUG logging enabled')
 
     if args.path is None:
         logging.info("Enter a directory path.")
@@ -479,6 +483,4 @@ def main():
     detector.start(args.path)
 
 if __name__ == '__main__':
-    logging.basicConfig(format="%(levelname)s %(asctime)s %(threadName)s: %(message)s", level=logging.INFO,
-                        datefmt="%H:%M:%S")
     main()
