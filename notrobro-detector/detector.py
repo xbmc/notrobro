@@ -442,7 +442,7 @@ def main():
                           help='TV show directory path')
     argparse.add_argument('--threshold', '-t', type=str,
                           help='Threshold for scene change detection (default=0.35)', default='0.35')
-    argparse.add_argument('--method', '-m', type=str,
+    argparse.add_argument('--method', '-m', type=str, choices=["all_match", "longest_common", "all"],
                           help='Method used for timings generation (all, all_match, or longest_common). "all" method will run every method until a match is found or no methods are left to try', default='all')
     argparse.add_argument('--workers', '-w', type=int,
                           help='How many directories to process (threads) at one time (default=4)', default=4)
@@ -470,10 +470,6 @@ def main():
             if not os.path.isdir(args.path):
                 logging.info("Path: " + args.path + " is not a directory.")
                 exit()
-
-    if args.method not in ["all_match", "longest_common", "all"]:
-        logging.info("Enter correct method: (1) all (2) all_match or (3) longest_common")
-        exit()
 
     logging.info('Threshold: %s' % args.threshold)
     logging.info('Method: %s' % args.method)
