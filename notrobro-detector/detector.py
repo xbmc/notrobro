@@ -11,6 +11,8 @@ import subprocess
 import shutil
 import copy
 import time
+import logging
+
 
 class DetectorMethod(ABC):
 
@@ -21,6 +23,7 @@ class DetectorMethod(ABC):
     @abstractmethod
     def get_common_outro(self, l1, l2):
         pass
+
 
 class AllMethods(DetectorMethod):
     methods = []
@@ -47,6 +50,7 @@ class AllMethods(DetectorMethod):
             i = i + 1
 
         return result
+
 
 class AllMatchMethod(DetectorMethod):
 
@@ -230,8 +234,8 @@ class Detector:
         result = {}  # dict containing path: {intro,outro} information
 
         # Processing for Intros
-        print("Finding Intros")
-        print("\t%s" % videos_process[0])
+        logging.info("Finding Intros")
+        logging.info("%s" % videos_process[0])
 
         video_prev = videos_process[0]
         result[video_prev] = {}
@@ -239,7 +243,7 @@ class Detector:
             videos_process[0], "intro")
 
         for i in range(1, len(videos_process)):
-            print("\t%s" % videos_process[i])
+            logging.info("%s" % videos_process[i])
             result[videos_process[i]] = {}
 
             hash_cur, scene_cur = self.get_hash_video(
@@ -262,22 +266,22 @@ class Detector:
                         str(intro_end_cur) + " 4"  # cut in edl files
                 result[videos_process[i]]['intro'] = time_string
             else:
-                print('\tNo intro found %s : %s' % (video_prev, videos_process[i]))
+                logging.info('No intro found %s : %s' % (video_prev, videos_process[i]))
 
             video_prev = videos_process[i]
             hash_prev = hash_cur
             scene_prev = scene_cur
 
         # Processing for Outros
-        print('Finding Outros')
-        print('\t%s' % videos_process[0])
+        logging.info('Finding Outros')
+        logging.info('%s' % videos_process[0])
 
         video_prev = videos_process[0]
         hash_prev, scene_prev = self.get_hash_video(
             videos_process[0], "outro")
 
         for i in range(1, len(videos_process)):
-            print('\t%s' % videos_process[i])
+            logging.info('%s' % videos_process[i])
             hash_cur, scene_cur = self.get_hash_video(
                 videos_process[i], "outro")
             indices = self.method.get_common_outro(hash_prev, hash_cur)
@@ -305,7 +309,7 @@ class Detector:
                     str(outro_end_cur) + " 5"  # cut in edl files
                 result[videos_process[i]]['outro'] = time_string
             else:
-                print('\tNo outro found %s : %s' % (video_prev, videos_process[i]))
+                logging.info('No outro found %s : %s' % (video_prev, videos_process[i]))
 
             video_prev = videos_process[i]
             hash_prev = hash_cur
@@ -328,7 +332,7 @@ class Detector:
                     if 'outro' in timings[file]:
                         f.write(timings[file]['outro'] + "\n")
 
-        print('Timing files created.')
+        logging.info('Timing files created.')
 
 
     def generate(self, path, force):
@@ -345,7 +349,7 @@ class Detector:
 
         # if there is only 1 video in the directory
         if len(videos) == 1:
-            print("Add atleast 1 more video of the TV show to the directory for processing.")
+            logging.info("Add at least 1 more video of the TV show to the directory for processing.")
             exit()
 
         if(not os.path.exists(self.jpg_folder)):
@@ -363,7 +367,7 @@ class Detector:
             videos_process = copy.deepcopy(videos)
 
         if len(videos_process) == 0:
-            print("No videos to process.")
+            logging.info("No videos to process.")
         elif len(videos_process) == 1:
             vid = videos_process[0]
             videos.sort()  # basic ordering for videos by sorting based on season and episode
@@ -415,17 +419,17 @@ class DetectorThreadManager():
             if(not thread is threading.main_thread()):
                 thread.join()
 
-        print('All directories processed')
+        logging.info('All directories processed')
         subprocess.call("stty sane", shell=True)
 
     def start_thread(self, dir):
-        print('Starting detector in: %s' % dir)
+        logging.info('Starting detector in: %s' % dir)
         detector = Detector(self.args.threshold, self.args.method, self.args.debug)
         detector.generate(dir, self.args.force)
 
 
 def signal_handler(sig, frame):
-    print('You pressed Ctrl+C!')
+    logging.info('You pressed Ctrl+C!')
 
     sys.exit(0)
 
@@ -447,28 +451,34 @@ def main():
     args = argparse.parse_args()
     signal.signal(signal.SIGINT, signal_handler)
 
+    if(args.debug):
+        logging.setLevel(logging.DEBUG)
+        logging.debug('DEBUG logging enabled')
+
     if args.path is None:
-        print("Enter a directory path.")
+        logging.info("Enter a directory path.")
         exit()
     else:
         if not os.path.exists(args.path):
-            print("TV show directory: " + args.path + " not found.")
+            logging.info("TV show directory: " + args.path + " not found.")
             exit()
         else:
             if not os.path.isdir(args.path):
-                print("Path: " + args.path + " is not a directory.")
+                logging.info("Path: " + args.path + " is not a directory.")
                 exit()
 
     if args.method not in ["all_match", "longest_common", "all"]:
-        print("Enter correct method: (1) all (2) all_match or (3) longest_common")
+        logging.info("Enter correct method: (1) all (2) all_match or (3) longest_common")
         exit()
 
-    print('Threshold: %s' % args.threshold)
-    print('Method: %s' % args.method)
-    print('Max Workers: %d' % args.workers)
+    logging.info('Threshold: %s' % args.threshold)
+    logging.info('Method: %s' % args.method)
+    logging.info('Max Workers: %d' % args.workers)
 
     detector = DetectorThreadManager(args)
     detector.start(args.path)
 
 if __name__ == '__main__':
+    logging.basicConfig(format="%(levelname)s %(asctime)s %(threadName)s: %(message)s", level=logging.INFO,
+                        datefmt="%H:%M:%S")
     main()
