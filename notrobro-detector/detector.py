@@ -465,8 +465,7 @@ def main():
 
     print('Threshold: %s' % args.threshold)
     print('Method: %s' % args.method)
-    #detector = Detector(args.threshold, args.method, args.debug)
-    #detector.generate(args.path, args.force)
+    print('Max Workers: %d' % args.workers)
 
     detector = DetectorThreadManager(args)
     detector.start(args.path)
