@@ -402,17 +402,18 @@ class DetectorThreadManager():
                 dirs_process.append(os.path.join(root, name))
 
         # process each dir as a thread, up to max threads at a time
-        workers = 2
         while(len(dirs_process) > 0):
-            while(len(dirs_process) > 0 and len(threading.enumerate()) <= workers):
+            while(len(dirs_process) > 0 and len(threading.enumerate()) <= self.args.workers):
                 t = threading.Thread(target=self.start_thread, args=(dirs_process.pop(),))
+                t.daemon = True
                 t.start()
 
             time.sleep(2)
 
         # wait for any final threads to finish
-        while(len(threading.enumerate()) > 1):
-            time.sleep(2)
+        for thread in threading.enumerate():
+            if(not thread is threading.main_thread()):
+                thread.join()
 
         print('All directories processed')
 
@@ -424,6 +425,7 @@ class DetectorThreadManager():
 
 def signal_handler(sig, frame):
     print('You pressed Ctrl+C!')
+
     sys.exit(0)
 
 
@@ -432,9 +434,11 @@ def main():
     argparse.add_argument('--path', '-p', type=str,
                           help='TV show directory path')
     argparse.add_argument('--threshold', '-t', type=str,
-                          help='Threshold for scene change detection(default=0.35)', default='0.35')
+                          help='Threshold for scene change detection (default=0.35)', default='0.35')
     argparse.add_argument('--method', '-m', type=str,
                           help='Method used for timings generation (all, all_match, or longest_common). "all" method will run every method until a match is found or no methods are left to try', default='all')
+    argparse.add_argument('--workers', '-w', type=int,
+                          help='How many directories to process (threads) at one time (default=4)', default=4)
     argparse.add_argument('--force', '-f', action='store_true',
                           help='Process all videos in the directory')
     argparse.add_argument('--debug', '-d', action='store_true',
@@ -465,7 +469,6 @@ def main():
 
     detector = DetectorThreadManager(args)
     detector.start(args.path)
-
 
 if __name__ == '__main__':
     main()

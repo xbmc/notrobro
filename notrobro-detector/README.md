@@ -14,10 +14,11 @@ pip3 -r requirements.txt
 ## Detector arguments:
 Argument | Description
 --- | --- 
-  --path PATH, -p PATH | TV show directory path (mandatory argument)
+  --path PATH, -p PATH | TV show directory path (mandatory argument), can be a directory containing multiple shows in subdirectories
   -h, --help | show this help message and exit
-  --threshold THRESHOLD, -t THRESHOLD | Threshold for scene change detection(default=0.35)
+  --threshold THRESHOLD, -t THRESHOLD | Threshold for scene change detection (default=0.35)
   --method METHOD, -m METHOD | Method used for timings generation (all (default), all_match or longest_common)
+  --workers MAX, -w MAX | The total number of directories that can be processed at one time, each in its own thread (default=4)
   --force, -f | Process all videos in the directory (default=False)
 
 Minimum Required Command:
@@ -42,4 +43,10 @@ Change Method:
 ```shell
 	python3 detector.py --path /your/path/ --method longest_common
  	python3 detector.py -p /your/path/ -m longest_common
+```
+
+Run more workers:
+```shell
+        python3 detector.py --path /your/path --workers 5
+        python3 detector.py -p /your/path -w 5
 ```
