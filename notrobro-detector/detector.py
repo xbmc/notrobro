@@ -180,23 +180,24 @@ class Detector:
 
         input_file = path
 
+        scene_file = os.path.join(self.jpg_folder, 'scenes')
         if category is "intro":
             scenes = "ffmpeg -i " + '"' + input_file + '"' + " -ss 0 -to " + \
                 str(end_time) + ' -vf  "select=' + "'gt(scene," + str(th) + ")'," + \
-                'showinfo" -vsync vfr "' + name + '/' + '"%04d.jpg>scenes 2>&1'
+                'showinfo" -vsync vfr "' + name + '/' + '"%04d.jpg>' + scene_file + ' 2>&1'
         elif category is "outro":
             scenes = "ffmpeg -sseof " + str(outro_end_time) + " -i " + '"' + input_file + '"' + ' -vf  "select=' + \
                 "'gt(scene," + str(th) + ")'," + 'showinfo" -vsync vfr "' + \
-                   name + '/' + '"%04d.jpg>scenes 2>&1'
+                   name + '/' + '"%04d.jpg>' + scene_file + ' 2>&1'
 
         subprocess.call(scenes, shell=True)
 
-        file = open("scenes", "r")
+        file = open(scene_file, "r")
         out = file.read()
         file.close()
         times = self.get_timings(out, category)
 
-        os.remove("./scenes")
+        os.remove(scene_file)
 
         return times
 
@@ -204,13 +205,14 @@ class Detector:
     def get_hash_video(self, path, category):
         scene_transitions = self.get_scene_transitions(path, category)
         if category == "outro":
-            duration = "ffmpeg -i " + '"' + path + '"' + ">duration 2>&1"
+            duration_file = os.path.join(self.jpg_folder, "duration")
+            duration = "ffmpeg -i " + '"' + path + '"' + ">" + duration_file + " 2>&1"
             subprocess.call(duration, shell=True)
-            file = open("duration", "r")
+            file = open(duration_file, "r")
             out = file.read()
             file.close()
             total_time = self.get_duration(out)
-            os.remove("./duration")
+            os.remove(duration_file)
             outro_end_time = -300
             begin = total_time + outro_end_time
             for i in range(len(scene_transitions)):
