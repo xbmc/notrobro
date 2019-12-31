@@ -416,6 +416,7 @@ class DetectorThreadManager():
                 thread.join()
 
         print('All directories processed')
+        subprocess.call("stty sane", shell=True)
 
     def start_thread(self, dir):
         print('Starting detector in: %s' % dir)
