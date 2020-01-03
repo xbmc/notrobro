@@ -1,5 +1,5 @@
 import sys
-import xbmcvfs as fxbmc
+from . import xbmcvfs as fxbmc
 
 module = type(sys)('xbmcvfs')
 module.exists = fxbmc.exists
