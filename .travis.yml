@@ -15,7 +15,7 @@ install:
 
 # command to run tests
 script: 
-  - cd service.notrobro.tests
+  - cd service.notrobro/tests
   - py.test -v
   - cd ../../
 
