@@ -14,7 +14,10 @@ install:
   - pip install pytest mock
 
 # command to run tests
-script: py.test -v
+script: 
+  - cd service.notrobro.tests
+  - py.test -v
+  - cd ../../
 
 jobs:
   include:
