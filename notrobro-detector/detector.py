@@ -279,7 +279,7 @@ class Detector:
 
         if len(videos_process) == 0:
             logging.info("No videos to process.")
-        elif len(videos_process) == 1:
+        elif len(videos_process) == 1 and len(videos) >= 2:
             vid = videos_process[0]
             videos.sort()  # basic ordering for videos by sorting based on season and episode
             try:
