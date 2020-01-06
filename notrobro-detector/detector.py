@@ -169,16 +169,18 @@ class Detector:
                     intro_end_prev = scene_prev[indices[-1][0] + 1]
                     intro_end_cur = scene_cur[indices[-1][1] + 1]
 
-                    if 'intro' not in result[video_prev]:
-                        time_string = str(intro_start_prev) + " " + \
-                            str(intro_end_prev) + " 4"  # cut in edl files
-                        result[video_prev]['intro'] = time_string
-
-                    time_string = str(intro_start_cur) + " " + \
-                            str(intro_end_cur) + " 4"  # cut in edl files
-                    result[videos_process[i]]['intro'] = time_string
                 except IndexError:
                     logging.error('Error finding scene index')
+
+                if 'intro' not in result[video_prev]:
+                    time_string = str(intro_start_prev) + " " + \
+                        str(intro_end_prev) + " 4"  # cut in edl files
+                    result[video_prev]['intro'] = time_string
+
+                time_string = str(intro_start_cur) + " " + \
+                        str(intro_end_cur) + " 4"  # cut in edl files
+                result[videos_process[i]]['intro'] = time_string
+
             else:
                 logging.info('No intro found for: %s' % os.path.basename(videos_process[i]))
                 logging.debug('Comparison file: %s' % os.path.basename(video_prev))
