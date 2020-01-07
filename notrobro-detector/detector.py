@@ -63,23 +63,25 @@ class Detector:
                 time += out[current]
                 current += 1
             times.append(time)
-        if category is "intro":
+        if category is "intro" and len(times) > 0:
             del times[-1]
         return times
 
 
     def get_duration(self, out):
+        result = 0
         to_find = "Duration: "
         length = len(to_find)
         loc = out.find(to_find, 0)
-        duration = ""
-        current = loc + length
-        while out[current] != ",":
-            duration += out[current]
-            current += 1
-        total = duration.split(":")
-        to_sec = float(total[0])*3600.0 + float(total[1])*60.0 + float(total[1])
-        return to_sec
+        if(loc != -1):
+            duration = ""
+            current = loc + length
+            while out[current] != ",":
+                duration += out[current]
+                current += 1
+            total = duration.split(":")
+            result = float(total[0])*3600.0 + float(total[1])*60.0 + float(total[1])
+        return result
 
 
     def get_scene_transitions(self, path, category):
