@@ -269,6 +269,10 @@ class Detector:
         if(not os.path.exists(self.jpg_folder)):
             os.mkdir(self.jpg_folder)
 
+        # mark a file within the folder with the base path of this detector (for debug)
+        with open(os.path.join(self.jpg_folder, 'path.txt'), 'w') as f:
+            f.write(path)
+
         # get videos which don't have a skip timings file (currently edl) according to --force parameter
         videos_process = []
         if force is False:
