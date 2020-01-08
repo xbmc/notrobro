@@ -22,23 +22,25 @@ class AllMethods(DetectorMethod):
         self.methods.append(LongestContinousMethod())
 
 
-    def get_common_intro(self, l1, l2):
+    def _method_loop(self, l1, l2, method):
         result = []
         i = 0
         while(i < len(self.methods) and len(result) == 0):
-            result = self.methods[i].get_common_intro(l1,l2)
+            if(method == 'intro'):
+                result = self.methods[i].get_common_intro(l1, l2)
+            else:
+                result = self.methods[i].get_common_outro(l1, l2)
+
             i = i + 1
 
         return result
+
+
+    def get_common_intro(self, l1, l2):
+        return self._method_loop(l1, l2, 'intro')
 
     def get_common_outro(self, l1, l2):
-        result = []
-        i = 0
-        while(i < len(self.methods) and len(result) == 0):
-            result = self.methods[i].get_common_outro(l1,l2)
-            i = i + 1
-
-        return result
+        return self._method_loop(l1, l2, 'outro')
 
 
 # all_match method
