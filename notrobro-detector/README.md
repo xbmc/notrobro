@@ -7,7 +7,7 @@ Make sure you have any required python libraries by running:
 
 ```
 
-pip3 -r requirements.txt
+pip3 install -r requirements.txt
 
 ```
 
