@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import xbmcvfs
 
 
 class NotrobroParser():
@@ -12,9 +13,10 @@ class NotrobroParser():
         name, _ = os.path.splitext(file)
         file_name = name + ".edl"
         timings = []
-        if os.path.exists(file_name):
-            with open(file_name, "r") as f:
-                timings = f.readlines()
+        if xbmcvfs.exists(file_name):
+            f = xbmcvfs.File(file_name)
+            timings = f.read().split('\n')
+            f.close()
         else:
             self.logger.debug("Timings file not found.")
         return timings
