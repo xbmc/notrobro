@@ -63,7 +63,7 @@ class Detector:
                 time += out[current]
                 current += 1
             times.append(time)
-        if category is "intro" and len(times) > 0:
+        if category == "intro" and len(times) > 0:
             del times[-1]
         return times
 
@@ -99,11 +99,11 @@ class Detector:
         input_file = path
 
         scene_file = os.path.join(self.jpg_folder, 'scenes')
-        if category is "intro":
+        if category == "intro":
             scenes = "ffmpeg -i " + '"' + input_file + '"' + " -ss 0 -to " + \
                 str(end_time) + ' -vf  "select=' + "'gt(scene," + str(th) + ")'," + \
                 'showinfo" -vsync vfr "' + name + '/' + '"%04d.jpg>' + scene_file + ' 2>&1'
-        elif category is "outro":
+        elif category == "outro":
             scenes = "ffmpeg -sseof " + str(outro_end_time) + " -i " + '"' + input_file + '"' + ' -vf  "select=' + \
                 "'gt(scene," + str(th) + ")'," + 'showinfo" -vsync vfr "' + \
                    name + '/' + '"%04d.jpg>' + scene_file + ' 2>&1'
