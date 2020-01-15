@@ -219,9 +219,8 @@ class Detector:
                 logging.error('error finding scene index')
 
         # if nothing was found attempt to try another video comparison
-        if(len(result) == 0):
-            if(len(video_list) > 0):
-                result = self.compare_videos(video_list.pop(), video2, category, video_list)
+        if(len(result) == 0 and len(video_list) > 0):
+            result = self.compare_videos(video_list.pop(), video2, category, video_list)
 
         return result
 
