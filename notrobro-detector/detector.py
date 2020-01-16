@@ -1,6 +1,7 @@
 from methods import AllMethods, AllMatchMethod, LongestContinousMethod
 from argparse import ArgumentParser
 from PIL import Image
+import random
 import signal
 import sys
 import os
@@ -14,14 +15,52 @@ import time
 import logging
 
 
+class EDLReader:
+    times = None
+
+    def __init__(self, file):
+        self.times = self._getTimings(file)
+
+    def _getTimings(self, file):
+        result = []
+        if(os.path.exists(file)):
+            with open(file, 'r') as f:
+                result = f.readlines()
+
+        return result
+
+    def _hasAction(self, action_id):
+        result = False
+
+        i = 0
+        while(i < len(self.times) and not result):
+            # for each line check if the EDL action is the one we're looking for
+            split_line = self.times[i].strip().split()
+
+            if(int(split_line[2]) == action_id):
+                result = True
+            i = i + 1
+
+        return result
+
+    @property
+    def hasIntro(self):
+        return self._hasAction(4)
+
+    @property
+    def hasOutro(self):
+        return self._hasAction(5)
+
+
 class Detector:
     jpg_folder = './jpgs'  # location of jpg images from video
     threshold = 0.35  # default threshold, can be passed as arg
     method = None  # detector method class
+    categories = None  # the categories to run detection on (intro, outro)
     debug = False
 
 
-    def  __init__(self, threshold, method, level='info'):
+    def  __init__(self, threshold, method, categories=['intro','outro'], level='info'):
         self.threshold = threshold
 
         if(level.lower() == 'debug'):
@@ -33,6 +72,8 @@ class Detector:
             self.method = LongestContinousMethod()
         elif(method == 'all'):
             self.method = AllMethods()
+
+        self.categories = categories
 
 
     def get_hash(self, path):
@@ -90,11 +131,11 @@ class Detector:
         # in seconds from end of video (can be put in arguments as well)
         outro_end_time = -300
 
+        # create jpg directory for video frames
         name, _ = os.path.splitext(path)
-        name = os.path.join(self.jpg_folder, os.path.basename(name))
-        if os.path.exists(name):
-            shutil.rmtree(name)
-        os.mkdir(name)
+        name = os.path.join(self.jpg_folder, '%s_%s' % (os.path.basename(name), category))
+        if not os.path.exists(name):
+            os.mkdir(name)
 
         input_file = path
 
@@ -136,102 +177,85 @@ class Detector:
             for i in range(len(scene_transitions)):
                 scene_transitions[i] = str(float(scene_transitions[i]) + begin)
         name, _ = os.path.splitext(path)
-        name = os.path.join(self.jpg_folder, os.path.basename(name))
+        name = os.path.join(self.jpg_folder, '%s_%s' % (os.path.basename(name), category))
         hashlist, _ = self.get_hash_from_dir(name)
-        if os.path.exists(name) and not self.debug:
-            shutil.rmtree(name)
 
         return hashlist, scene_transitions
 
+    def make_timestring(self, timings, category):
+        # EDL format is "start end action"
+        actions = {'intro': 4, 'outro': 5}
+        return "%s %s %d" % (str(timings[0]), str(timings[1]), actions[category])
 
-    def gen_timings_processed(self, videos_process):
+
+    def compare_videos(self, video1, video2, category, video_list):
+        logging.info('processing %s for %s, %d tries left' % (category, os.path.basename(video2), len(video_list)))
+        result = {}
+        first_hash, first_scene = self.get_hash_video(video1, category)
+        second_hash, second_scene = self.get_hash_video(video2, category)
+
+        if(category == 'intro'):
+            indices = self.method.get_common_intro(first_hash, second_hash)
+        else:
+            indices = self.method.get_common_outro(first_hash, second_hash)
+
+        if(len(indices) > 0):
+            try:
+                first_start = first_scene[indices[0][0]]
+                second_start = second_scene[indices[0][1]]
+
+                if(category == 'intro'):
+                    first_end = first_scene[indices[-1][0] + 1]
+                    second_end = second_scene[indices[-1][1] + 1]
+                else:
+                    first_end = first_scene[indices[-1][0]]
+                    second_end = second_scene[indices[-1][1]]
+
+
+                result['video1'] = {'file': video1, 'timings': (first_start, first_end)}
+                result['video2'] = {'file': video2, 'timings': (second_start, second_end)}
+
+            except IndexError:
+                logging.error('error finding scene index')
+
+        # if nothing was found attempt to try another video comparison
+        if(len(result) == 0 and len(video_list) > 0):
+            result = self.compare_videos(video_list.pop(), video2, category, video_list)
+
+        return result
+
+    def gen_timings_processed(self, videos_process, intro_found, outro_found):
         result = {}  # dict containing path: {intro,outro} information
+        timings_found = {'intro': intro_found, 'outro': outro_found}  # list of videos that have succeeded in finding intros/outros, used for regressive comparisons
 
         # Processing for Intros
-        logging.info("Detecting intro for: %s" % os.path.basename(videos_process[0]))
-
         video_prev = videos_process[0]
         result[video_prev] = {}
-        hash_prev, scene_prev = self.get_hash_video(
-            videos_process[0], "intro")
 
         for i in range(1, len(videos_process)):
-            logging.info("Detecting intro for: %s" % os.path.basename(videos_process[i]))
             result[videos_process[i]] = {}
 
-            hash_cur, scene_cur = self.get_hash_video(
-                videos_process[i], "intro")
-            indices = self.method.get_common_intro(hash_prev, hash_cur)
+            # run same loop for each category (intro and outro by default)
+            for category in self.categories:
+                # find times, result dict is {'video1': {'file':'', 'timings':(), .....}
+                times = self.compare_videos(video_prev, videos_process[i], category, copy.deepcopy(timings_found[category]))
 
-            if(len(indices) > 0):
-                try:
-                    intro_start_prev = scene_prev[indices[0][0]]
-                    intro_start_cur = scene_cur[indices[0][1]]
+                if(len(times) > 0):
 
-                    intro_end_prev = scene_prev[indices[-1][0] + 1]
-                    intro_end_cur = scene_cur[indices[-1][1] + 1]
+                    # check that video1 exists, we want an EDL for it (precence in result), and we haven't found an EDL already
+                    if 'video1' in times and times['video1']['file'] in result and category not in result[times['video1']['file']]:
+                        result[times['video1']['file']][category] = self.make_timestring(times['video1']['timings'], category)
 
-                    if 'intro' not in result[video_prev]:
-                        time_string = str(intro_start_prev) + " " + \
-                            str(intro_end_prev) + " 4"  # cut in edl files
-                        result[video_prev]['intro'] = time_string
+                    if(times['video1']['file'] not in timings_found[category]):
+                        logging.debug('adding %s to found list for: %s' % (category, times['video1']['file']))
+                        timings_found[category].append(times['video1']['file'])
 
-                    time_string = str(intro_start_cur) + " " + \
-                            str(intro_end_cur) + " 4"  # cut in edl files
-                    result[videos_process[i]]['intro'] = time_string
-                except IndexError:
-                    logging.error('Error finding scene index')
-
-            else:
-                logging.info('No intro found for: %s' % os.path.basename(videos_process[i]))
-                logging.debug('Comparison file: %s' % os.path.basename(video_prev))
+                    if 'video2' in times:
+                        result[videos_process[i]][category] = self.make_timestring(times['video2']['timings'], category)
+                else:
+                    logging.info('No %s found for: %s' % (category, os.path.basename(videos_process[i])))
 
             video_prev = videos_process[i]
-            hash_prev = hash_cur
-            scene_prev = scene_cur
-
-        # Processing for Outros
-        logging.info('Detecting outro for: %s' % os.path.basename(videos_process[0]))
-
-        video_prev = videos_process[0]
-        hash_prev, scene_prev = self.get_hash_video(
-            videos_process[0], "outro")
-
-        for i in range(1, len(videos_process)):
-            logging.info('Detecting outro for: %s' % os.path.basename(videos_process[i]))
-            hash_cur, scene_cur = self.get_hash_video(
-                videos_process[i], "outro")
-            indices = self.method.get_common_outro(hash_prev, hash_cur)
-
-            if(len(indices) > 0):
-                outro_start_prev = scene_prev[indices[0][0]]
-                outro_start_cur = scene_cur[indices[0][1]]
-
-                try:
-                    outro_end_prev = scene_prev[indices[-1][0] + 1]
-                except:
-                    outro_end_prev = scene_prev[indices[-1][0]]
-
-                try:
-                    outro_end_cur = scene_cur[indices[-1][1] + 1]
-                except:
-                    outro_end_cur = scene_cur[indices[-1][1]]
-
-                if 'outro' not in result[video_prev]:
-                    time_string = str(outro_start_prev) + " " + \
-                        str(outro_end_prev) + " 5"  # cut in edl files
-                    result[video_prev]['outro'] = time_string
-
-                time_string = str(outro_start_cur) + " " + \
-                    str(outro_end_cur) + " 5"  # cut in edl files
-                result[videos_process[i]]['outro'] = time_string
-            else:
-                logging.info('No outro found for: %s' % os.path.basename(videos_process[i]))
-                logging.debug('Comparison file: %s' % os.path.basename(video_prev))
-
-            video_prev = videos_process[i]
-            hash_prev = hash_cur
-            scene_prev = scene_cur
 
         return result
 
@@ -265,6 +289,14 @@ class Detector:
         for ext in ('*.mp4', '*.mkv', '*.avi', '*.mov', '*.wmv'):  # video formats - extendable
             videos.extend(glob.glob(os.path.join(path, ext)))
 
+        # read in any manually excluded files
+        exclude_list = []
+        if(os.path.exists(os.path.join(path, 'edl_exclude.txt'))):
+            logging.debug('Found exclude file in %s' % path)
+            with open(os.path.join(path, 'edl_exclude.txt')) as f:
+                exclude_list = f.readlines()
+            exclude_list = list(map(lambda x: x.strip(), exclude_list))
+
         # if there is only 1 video in the directory
         if len(videos) == 1:
             logging.info("Add at least 1 more video of the TV show to the directory for processing.")
@@ -278,31 +310,43 @@ class Detector:
 
         # get videos which don't have a skip timings file (currently edl) according to --force parameter
         videos_process = []
+        intro_found = []
+        outro_found = []
         if force is False:
             for file in videos:
                 filename, _ = os.path.splitext(file)
                 suffix = '.edl'
                 if (filename + suffix) not in all_files:
-                    videos_process.append(file)
+                    if(os.path.basename(file) not in exclude_list):
+                        videos_process.append(file)
+                    else:
+                        logging.info('skipping %s - in exclude list' % os.path.basename(file))
+                else:
+                    parser = EDLReader(filename + suffix)
+
+                    if(parser.hasIntro):
+                        logging.debug('Intro found for %s' % os.path.basename(file))
+                        intro_found.append(file)
+
+                    if(parser.hasOutro):
+                        logging.debug('Outro found for %s' % os.path.basename(file))
+                        outro_found.append(file)
         else:
             videos_process = copy.deepcopy(videos)
 
-        if len(videos_process) == 0:
-            logging.info("No videos to process.")
-        elif len(videos_process) == 1 and len(videos) >= 2:
-            vid = videos_process[0]
-            videos.sort()  # basic ordering for videos by sorting based on season and episode
-            try:
-                comp_vid = videos[videos.index(vid) - 1]
-            except:
-                comp_vid = videos[videos.index(vid) + 1]
-            timings = self.gen_timings_processed(
-                [comp_vid, vid])
-            self.create_edl(timings)
+        if len(videos_process) == 1 and len(videos) > 1:
+            # need at least 2 videos to start processing
+            index = 0
+            while(videos[index] != videos_process[0] and videos[index] not in exclude_list):
+                index = random.randint(0,len(videos) - 1)
+            videos_process.append(videos[index])
+
+        if(len(videos_process) < 2):
+            logging.info("No videos to process in %s" % path)
         else:
             videos_process.sort()  # basic ordering for videos by sorting based on season and episode
             timings = self.gen_timings_processed(
-                videos_process)
+                videos_process, intro_found, outro_found)
             self.create_edl(timings)
 
         if(not self.debug):
@@ -345,7 +389,7 @@ class DetectorThreadManager():
 
     def start_thread(self, dir):
         logging.info('Starting detector in: %s' % dir)
-        detector = Detector(self.args.threshold, self.args.method, self.args.log)
+        detector = Detector(self.args.threshold, self.args.method, self.args.categories, self.args.log)
         detector.generate(dir, self.args.force)
 
 
@@ -363,6 +407,8 @@ def main():
                           help='Threshold for scene change detection (default=0.35)', default='0.35')
     argparse.add_argument('--method', '-m', type=str, choices=["all_match", "longest_common", "all"],
                           help='Method used for timings generation (all, all_match, or longest_common). "all" method will run every method until a match is found or no methods are left to try', default='all')
+    argparse.add_argument('--categories', '-c', type=str, nargs='*', choices=['intro', 'outro'],
+                           help='What categories to detect on each video, choices are intro and outro. Default detects both', default=['intro', 'outro'])
     argparse.add_argument('--workers', '-w', type=int,
                           help='How many directories to process (threads) at one time (default=4)', default=4)
     argparse.add_argument('--force', '-f', action='store_true',
@@ -388,6 +434,7 @@ def main():
 
     logging.info('Threshold: %s' % args.threshold)
     logging.info('Method: %s' % args.method)
+    logging.info('Categories: %s', ', '.join(args.categories))
     logging.info('Max Workers: %d' % args.workers)
 
     detector = DetectorThreadManager(args)
